@@ -1,0 +1,1609 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>黒田先生の百人一首 - 五色百人一首 練習アプリ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Level UP! Overlay -->
+  <div id="level-up-banner" class="level-up-overlay">
+    <div class="level-up-box">
+      <h2 style="animation: shine 1.5s infinite alternate;">Level UP!</h2>
+      <p style="font-size: 1.6rem; margin-bottom: 0.5rem;">レベル <span id="popup-old-level">1</span> ➔ <span id="popup-new-level">2</span></p>
+      <div id="popup-rank-change-area" class="level-up-rank-up" style="display: none;">
+        ✨ 称号昇格！: <span id="popup-new-rank">-</span> ✨
+      </div>
+      <div class="level-up-celebration">
+        「<span id="popup-celebration-message">素晴らしい！歌の心が伝わってきたぞ！</span>」
+      </div>
+    </div>
+  </div>
+
+  <!-- Rank UP! (昇格) Overlay -->
+  <div id="rank-up-banner" class="level-up-overlay" style="background: rgba(124, 58, 237, 0.45); display: none;">
+    <div class="level-up-box" style="border: 5px solid #7c3aed; background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%); max-width: 500px; box-shadow: 0 0 25px rgba(124,58,237,0.5);">
+      <h2 style="color: #7c3aed; font-size: 3rem; margin-bottom: 0.5rem; text-shadow: 0 0 10px rgba(124,58,237,0.3); animation: shine 1.5s infinite alternate;">祝・昇格！</h2>
+      <p style="font-size: 1.3rem; font-weight: bold; margin-bottom: 1.2rem; color: #6d28d9;">新しい称号を獲得しました！</p>
+      <div style="font-size: 2.2rem; font-weight: bold; color: #7c3aed; margin: 1rem 0; animation: bounceText 1s infinite alternate;">
+        「<span id="popup-new-title-name">-</span>」
+      </div>
+      <div class="level-up-celebration" style="font-size: 1.05rem; color: #555555; margin-top: 1rem; font-weight: bold;">
+        歌詠みとしての道がさらに極まりました！
+      </div>
+    </div>
+  </div>
+
+  <!-- Badge Unlock Popup Overlay -->
+  <div id="badge-unlock-banner" class="level-up-overlay" style="background: rgba(15, 23, 42, 0.65); display: none;">
+    <div class="level-up-box" id="badge-unlock-box" style="border: 5px solid var(--badge-theme-color, #3b82f6); background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); max-width: 500px; box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);">
+      <h2 style="color: var(--badge-theme-color, #3b82f6); font-size: 2.5rem; margin-bottom: 0.5rem; text-shadow: 0 0 10px rgba(59,130,246,0.2); animation: shine 1.5s infinite alternate;">🏅 称号バッジ獲得！ 🏅</h2>
+      <p style="font-size: 1.2rem; font-weight: bold; margin-bottom: 1rem; color: #334155;">新しい隠し称号が解放されました！</p>
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 1.2rem 0;">
+        <div id="popup-badge-icon" style="font-size: 4rem; width: 90px; height: 90px; border-radius: 50%; background: var(--badge-theme-color-rgba, rgba(59,130,246,0.1)); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 1rem; animation: pulseGlow 2s infinite;">🎨</div>
+        <div id="popup-badge-name" style="font-size: 2rem; font-weight: bold; color: var(--badge-theme-color, #3b82f6); text-align: center;">五色コンプリート</div>
+      </div>
+      <div id="popup-badge-desc" style="font-size: 1rem; color: #475569; font-weight: bold; line-height: 1.5; margin: 0.5rem 0 1.2rem 0; padding: 0.5rem 1rem; background: rgba(0,0,0,0.02); border-radius: 8px; width: 100%; box-sizing: border-box;">
+        すべてのお札の色を体験した、バラエティ豊かな歌い手！
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-muted); font-weight: normal; margin: 0;">
+        ※獲得したバッジは実績メニューから確認できます。
+      </p>
+    </div>
+  </div>
+
+  <!-- Skin Unlock Popup Overlay -->
+  <div id="skin-unlock-banner" class="level-up-overlay" style="background: rgba(15, 23, 42, 0.7); display: none; z-index: 11000;" onclick="this.style.display='none';">
+    <div class="level-up-box" style="border: 5px solid #10b981; background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%); max-width: 450px; box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);">
+      <h2 style="color: #10b981; font-size: 2.3rem; margin-bottom: 0.5rem;">🎴 デザイン解放！ 🎴</h2>
+      <p style="font-size: 1.1rem; font-weight: bold; margin-bottom: 1rem; color: #334155;">新しい取り札の背景デザインが解放されました！</p>
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 1.2rem 0;">
+        <div id="popup-skin-preview" class="karuta-card" style="width: 110px; height: 150px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md); margin-bottom: 1rem; pointer-events: none;">
+          <div class="karuta-card-text" style="writing-mode: vertical-rl; text-orientation: upright; font-family: serif; font-weight: bold; font-size: 1.1rem;">うつくしい<br>日本のうた</div>
+        </div>
+        <div id="popup-skin-name" style="font-size: 1.8rem; font-weight: bold; color: #10b981; text-align: center;">デザイン名</div>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-muted); font-weight: normal; margin: 0;">
+        ※「デザイン図鑑」メニューからこのデザインをカードに適用できます。<br>
+        (タップして閉じる)
+      </p>
+    </div>
+  </div>
+
+  <!-- Achievement Unlock Overlay -->
+  <div id="achievement-unlock-banner" class="level-up-overlay" style="background: rgba(0, 0, 0, 0.65);">
+    <div class="level-up-box" style="border: 4px solid var(--color-orange); background: linear-gradient(135deg, #ffffff 0%, #fffbf5 100%);">
+      <h2 style="color: var(--color-orange); font-size: 2.3rem; margin-bottom: 0.5rem;">🏆 実績・隠し称号解放！ 🏆</h2>
+      <p style="font-size: 1.1rem; color: var(--text-muted); margin-bottom: 1.2rem;">
+        ノーミスクリアの偉業を達成しました！
+      </p>
+      <div style="font-size: 1.8rem; font-weight: bold; color: var(--color-orange); margin: 1rem 0; animation: bounceText 1s infinite alternate;">
+        「<span id="popup-achievement-name">-</span>」
+      </div>
+      <div class="level-up-celebration" style="font-size: 1rem; color: #555555; margin-top: 1rem;">
+        ※実績メニューから解放された称号をいつでも確認できます。
+      </div>
+    </div>
+  </div>
+
+  <!-- Strongest 4th Grader Banner -->
+  <div id="strongest-banner" class="level-up-overlay" style="background: rgba(212, 175, 55, 0.3);">
+    <div class="level-up-box" style="border: 5px solid #d4af37; background: linear-gradient(135deg, #ffffff 0%, #fffdf0 100%); max-width: 500px;">
+      <h2 style="color: #d4af37; font-size: 3.2rem; margin-bottom: 0.5rem; text-shadow: 0 0 10px rgba(212,175,55,0.4);">👑 最強の4年生 👑</h2>
+      <p style="font-size: 1.3rem; font-weight: bold; margin-bottom: 1rem; color: #b8931d;">ノーミスクリア達成！</p>
+      <p style="font-size: 1.05rem; color: var(--text-color); font-weight: bold; margin-bottom: 1rem; line-height: 1.5;">
+        「素晴らしい精神集中！おてつきを一度もせず、全ての歌を見事に聞き分けました！」
+      </p>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">
+        ※実績メニューに記録が保存されました。
+      </p>
+    </div>
+  </div>
+
+  <!-- Godspeed Banner -->
+  <div id="godspeed-banner" class="level-up-overlay" style="background: rgba(189, 33, 48, 0.25);">
+    <div class="level-up-box" style="border: 4px solid #bd2130; background: #ffffff; animation: thunderStrike 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; max-width: 500px;">
+      <h2 style="color: #bd2130; font-size: 3.5rem; margin-bottom: 0.5rem; text-shadow: 0 0 10px rgba(189,33,48,0.3);">⚡ 神速！ ⚡</h2>
+      <p style="font-size: 1.3rem; font-weight: bold; margin-bottom: 1.2rem; color: #a81c28;">驚異のタイムアタック達成！</p>
+      <p style="font-size: 1.05rem; color: var(--text-color); font-weight: bold; margin-bottom: 1rem; line-height: 1.5;">
+        「雷のごとき早業！30秒未満でクリアしました！」
+      </p>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">
+        ※実績メニューに記録が保存されました。
+      </p>
+    </div>
+  </div>
+
+  <!-- Ultimate Song Saint Banner -->
+  <div id="ultimate-saint-banner" class="level-up-overlay" style="background: rgba(218, 165, 32, 0.45);">
+    <div class="level-up-box" style="border: 6px double #ffd700; background: linear-gradient(135deg, #ffffff 0%, #fffdf0 100%); max-width: 550px; box-shadow: 0 0 35px rgba(255,215,0,0.6);">
+      <h2 style="color: #d4af37; font-size: 3.5rem; margin-bottom: 0.5rem; text-shadow: 0 0 15px rgba(255,215,0,0.6); animation: shine 1.5s infinite alternate;">🏆 究極の歌聖 🏆</h2>
+      <p style="font-size: 1.4rem; font-weight: bold; margin-bottom: 1.2rem; color: #b8931d;">カオスモード百首ノーミスクリア！</p>
+      <p style="font-size: 1.1rem; color: #1a1a1a; font-weight: bold; margin-bottom: 1rem; line-height: 1.6;">
+        「信じられぬ神技！百枚すべての歌を完全無欠に聞き分け、おてつきゼロでクリアしました！君こそかるた界の頂点、真の歌聖なり！」
+      </p>
+      <p style="font-size: 0.95rem; color: #b8931d; font-weight: bold; background: rgba(255,215,0,0.1); padding: 0.5rem; border-radius: 8px; margin-top: 0.5rem;">
+        ✨ 特典：黄金のテーマ背景が解放されました！ ✨
+      </p>
+    </div>
+  </div>
+
+  <!-- Weak Cards / Kimariji Generator Modal -->
+  <div id="weak-cards-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 800px; max-height: 85vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <h3 style="font-size: 1.4rem; color: var(--theme-color); font-weight: bold; display: flex; align-items: center; gap: 0.4rem;">
+          <span>🎴 苦手札リスト＆決まり字カード作成</span>
+        </h3>
+        <button class="close-btn" onclick="closeWeakCardsModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="overflow-y: auto; flex: 1; padding: 1.5rem;">
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.2rem; line-height: 1.5;">
+          苦手な札をチェックして、A4サイズでの印刷用PDFを自動作成できます。AI分析で検出された苦手札も自動でマークされます。
+        </p>
+
+        <!-- Controls row -->
+        <div style="display: flex; gap: 1rem; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; background: #f8fafc; padding: 0.8rem; border-radius: 8px;">
+          <div style="font-size: 0.95rem; font-weight: bold;">
+            選択中の札: <span id="weak-cards-count" style="color: var(--color-orange); font-size: 1.1rem;">0</span> 枚
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="rank-tab-btn" onclick="autoSelectWeakCards()" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border: 1px solid var(--theme-color); background: transparent; color: var(--theme-color); border-radius: 6px; cursor: pointer; font-weight: bold;">
+              AI分析苦手札を自動追加
+            </button>
+            <button class="rank-tab-btn" onclick="toggleAllWeakCards(true)" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border: 1px solid #ccc; background: transparent; color: #555; border-radius: 6px; cursor: pointer; font-weight: bold;">
+              全選択
+            </button>
+            <button class="rank-tab-btn" onclick="toggleAllWeakCards(false)" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border: 1px solid #ccc; background: transparent; color: #555; border-radius: 6px; cursor: pointer; font-weight: bold;">
+              全解除
+            </button>
+          </div>
+        </div>
+
+        <!-- Color navigation tabs inside modal -->
+        <div class="ranking-tabs" style="display: flex; gap: 2px; margin-bottom: 1rem; background: rgba(0,0,0,0.05); padding: 2px; border-radius: 6px;">
+          <button class="rank-tab-btn active" id="modal-tab-blue" onclick="switchModalColorTab('blue')" style="flex: 1; padding: 0.4rem; font-size: 0.8rem; border: none; border-radius: 4px; background: var(--theme-color); color: #fff; cursor: pointer; font-weight: bold;">青 (20)</button>
+          <button class="rank-tab-btn" id="modal-tab-pink" onclick="switchModalColorTab('pink')" style="flex: 1; padding: 0.4rem; font-size: 0.8rem; border: none; border-radius: 4px; background: transparent; color: var(--text-color); cursor: pointer; font-weight: bold;">桃 (20)</button>
+          <button class="rank-tab-btn" id="modal-tab-yellow" onclick="switchModalColorTab('yellow')" style="flex: 1; padding: 0.4rem; font-size: 0.8rem; border: none; border-radius: 4px; background: transparent; color: var(--text-color); cursor: pointer; font-weight: bold;">黄 (20)</button>
+          <button class="rank-tab-btn" id="modal-tab-green" onclick="switchModalColorTab('green')" style="flex: 1; padding: 0.4rem; font-size: 0.8rem; border: none; border-radius: 4px; background: transparent; color: var(--text-color); cursor: pointer; font-weight: bold;">緑 (20)</button>
+          <button class="rank-tab-btn" id="modal-tab-orange" onclick="switchModalColorTab('orange')" style="flex: 1; padding: 0.4rem; font-size: 0.8rem; border: none; border-radius: 4px; background: transparent; color: var(--text-color); cursor: pointer; font-weight: bold;">橙 (20)</button>
+        </div>
+
+        <!-- List container -->
+        <div id="modal-weak-cards-list" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 40vh; overflow-y: auto; padding-right: 0.5rem;">
+          <!-- Generated dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer" style="padding: 1rem; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 0.8rem; background: #f8fafc;">
+        <button class="setting-btn" onclick="closeWeakCardsModal()" style="padding: 0.5rem 1.2rem; border-color: #ccc; color: #555;">閉じる</button>
+        <button class="setting-btn" onclick="printWeakCards()" style="padding: 0.5rem 1.5rem; background: var(--theme-color); color: #fff; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem;">
+          🖨️ PDF印刷プレビューを開く
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Teacher Dashboard / Heatmap Modal -->
+  <div id="teacher-dashboard-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 900px; max-height: 85vh; display: flex; flex-direction: column;">
+      <div class="modal-header" style="border-bottom: 1px solid #e2e8f0;">
+        <h3 style="font-size: 1.4rem; color: #8b5cf6; font-weight: bold; display: flex; align-items: center; gap: 0.4rem;">
+          <span>🔑 黒田先生の秘密の部屋 (クラス集計)</span>
+        </h3>
+        <button class="close-btn" onclick="closeTeacherDashboard()">&times;</button>
+      </div>
+      <div class="modal-body" style="overflow-y: auto; flex: 1; padding: 1.5rem; background: #fafafa;">
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.5;">
+          クラス全員の「お手つきデータ」を集計し、どの札で一番ミスが起きやすいかを示すクラス全体の誤答ヒートマップです。
+        </p>
+
+        <!-- Legend -->
+        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.2rem; background: #fff; padding: 0.8rem 1.2rem; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.85rem;">
+          <span style="font-weight: bold; color: #334155;">お手つき回数凡例:</span>
+          <div style="display: flex; align-items: center; gap: 0.3rem;">
+            <span style="display: inline-block; width: 15px; height: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 3px;"></span> 0回
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.3rem;">
+            <span style="display: inline-block; width: 15px; height: 15px; background: #fee2e2; border: 1px solid #fecaca; border-radius: 3px;"></span> 1〜5回
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.3rem;">
+            <span style="display: inline-block; width: 15px; height: 15px; background: #fca5a5; border: 1px solid #f87171; border-radius: 3px;"></span> 6〜15回
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.3rem;">
+            <span style="display: inline-block; width: 15px; height: 15px; background: #ef4444; border: 1px solid #dc2626; border-radius: 3px;"></span> 16〜30回
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.3rem;">
+            <span style="display: inline-block; width: 15px; height: 15px; background: #991b1b; border: 1px solid #7f1d1d; border-radius: 3px;"></span> 31回以上
+          </div>
+        </div>
+
+        <!-- Heatmap Grid Container -->
+        <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 1.5rem;">
+          <div id="heatmap-grid" style="display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px;">
+            <!-- Generated dynamically -->
+          </div>
+        </div>
+
+        <!-- Hover detail panel -->
+        <div id="heatmap-hover-info" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 1rem; min-height: 80px; font-size: 0.95rem; line-height: 1.5; color: #1e293b; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: all 0.2s;">
+          セルにマウスを合わせるか、タップすると札の詳細が表示されます。
+        </div>
+
+        <!-- User PIN Reset Section (Kuroda Teacher secret tool) -->
+        <div style="background: #fff; border: 1.5px solid #8b5cf6; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-top: 1.5rem; text-align: left;">
+          <h4 style="margin: 0 0 0.8rem 0; color: #8b5cf6; font-size: 1.1rem; font-weight: bold; border-bottom: 2px solid #ddd; padding-bottom: 0.4rem;">🔑 児童の合言葉(PIN)リセット機能</h4>
+          <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 1rem; line-height: 1.4;">
+            生徒が合言葉を忘れてしまった時に使用します。対象のニックネームと、新しい4桁のPINを入力して設定ボタンを押してください。
+          </p>
+          <div style="display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap;">
+            <input type="text" id="reset-pin-name" placeholder="お名前 (例: たろう)" style="padding: 0.5rem 0.8rem; border: 2px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; font-weight: bold; width: 180px;" />
+            <input type="password" id="reset-pin-val" placeholder="新しい4桁PIN" maxlength="4" style="padding: 0.5rem 0.8rem; border: 2px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; font-weight: bold; width: 120px; text-align: center;" />
+            <button onclick="handleTeacherPinReset()" style="padding: 0.5rem 1.2rem; background: #8b5cf6; color: #fff; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s;">
+              合言葉を変更する
+            </button>
+          </div>
+          <div id="reset-pin-status" style="font-size: 0.8rem; font-weight: bold; color: #22c55e; margin-top: 0.5rem; min-height: 1.2rem;"></div>
+        </div>
+
+        <!-- Debug Mode Toggle Section -->
+        <div style="background: #fff; border: 1.5px solid #ef4444; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-top: 1.5rem; text-align: left;">
+          <h4 style="margin: 0 0 0.8rem 0; color: #ef4444; font-size: 1.1rem; font-weight: bold; border-bottom: 2px solid #ddd; padding-bottom: 0.4rem;">⚙️ デバッグモード設定</h4>
+          <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 1rem; line-height: 1.4;">
+            デバッグモードをONにすると、すべてのお札背景デザイン、特別称号、実績バッジがアンロックされ、制限なく使用・表示できるようになります。
+          </p>
+          <div style="display: flex; align-items: center; gap: 0.8rem;">
+            <label class="switch-label" style="display: inline-flex; align-items: center; cursor: pointer; font-weight: bold; font-size: 0.95rem; color: #1e293b; gap: 0.5rem;">
+              <input type="checkbox" id="teacher-debug-mode-checkbox" onchange="handleTeacherDebugModeToggle(this.checked)" style="width: 18px; height: 18px; cursor: pointer;" />
+              デバッグモードを有効にする（全機能・デザイン解放）
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding: 1rem; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: flex-end;">
+        <button class="setting-btn" onclick="closeTeacherDashboard()" style="padding: 0.5rem 1.5rem; background: #8b5cf6; color: #fff; border: none; font-weight: bold; border-radius: 8px; cursor: pointer;">
+          ダッシュボードを閉じる
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Print Sheet Container (Visible only during print) -->
+  <div id="printable-cards-container" style="display: none;"></div>
+
+  <!-- Simple Login Modal (Blocks app until logged in) -->
+  <div id="login-modal" class="achievements-modal-overlay" style="display: flex; z-index: 20000; background: linear-gradient(135deg, rgba(15,23,42,0.9) 0%, rgba(30,41,59,0.95) 100%); align-items: center; justify-content: center;">
+    <div class="level-up-box" style="width: 90%; max-width: 420px; border: 4px solid var(--theme-color); background: #ffffff; padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5), 0 0 40px rgba(59,130,246,0.3); border-radius: 16px;">
+      <h2 style="color: var(--theme-color); font-size: 2.2rem; margin-bottom: 0.5rem; font-family: 'Hiragino Mincho Pro', YuMincho, serif; font-weight: 900; text-shadow: 0 1px 2px rgba(0,0,0,0.05); text-align: center;">🎴 簡易ログイン</h2>
+      <p style="font-size: 0.88rem; color: #475569; margin-bottom: 1.5rem; line-height: 1.6; font-weight: bold; text-align: center;">
+        名前と4桁の合言葉を入力してスタート！<br>
+        <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: normal;">※同じ組み合わせで別の端末からでも続きから遊べます。初めての場合は自動的に新しく登録されます。</span>
+      </p>
+      
+      <div style="display: flex; flex-direction: column; gap: 1rem; text-align: left; width: 100%; box-sizing: border-box;">
+        <div>
+          <label style="font-size: 0.85rem; font-weight: bold; color: #334155; display: block; margin-bottom: 0.4rem;">👤 お名前 (ニックネーム)</label>
+          <input type="text" id="login-name-input" placeholder="なまえを入力してね" style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 1.05rem; font-weight: bold; box-sizing: border-box; outline: none; transition: border-color 0.2s;" />
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; font-weight: bold; color: #334155; display: block; margin-bottom: 0.4rem;">🔑 4桁の合言葉 (PIN)</label>
+          <input type="password" id="login-pin-input" placeholder="4けたの数字 (例: 1234)" maxlength="4" pattern="\d{4}" inputmode="numeric" style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 1.05rem; font-weight: bold; box-sizing: border-box; outline: none; letter-spacing: 0.5rem; text-align: center;" />
+        </div>
+        
+        <button onclick="handleLoginSubmit()" id="login-submit-btn" style="margin-top: 0.5rem; width: 100%; padding: 0.9rem; font-size: 1.1rem; font-weight: 800; border-radius: 8px; border: none; background: var(--theme-color); color: #fff; cursor: pointer; box-shadow: 0 4px 10px rgba(59,130,246,0.25); transition: all 0.2s;">
+          ログインしてはじめる 🚀
+        </button>
+        
+        <div id="login-status-msg" style="font-size: 0.82rem; text-align: center; font-weight: bold; color: #ef4444; min-height: 1.2rem; margin-top: 0.2rem;"></div>
+        
+        <div style="border-top: 1px dashed #cbd5e1; margin-top: 0.8rem; padding-top: 0.8rem; text-align: center;">
+          <button onclick="promptGuestConsent()" style="width: 100%; padding: 0.65rem; font-size: 0.95rem; font-weight: bold; border-radius: 8px; border: 1.5px solid #64748b; background: #fff; color: #475569; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
+            👤 ゲストとして遊ぶ
+          </button>
+          <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.4rem; font-weight: bold;">
+            ※ゲストはランキングに参加できません
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Guest Mode Consent Modal -->
+  <div id="guest-consent-modal" class="achievements-modal-overlay" style="display: none; z-index: 21000; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.75);">
+    <div class="level-up-box" style="width: 90%; max-width: 420px; border: 4px solid var(--theme-color); background: #ffffff; padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); border-radius: 16px; text-align: center;">
+      <h2 style="color: var(--theme-color); font-size: 1.8rem; margin-bottom: 1rem; font-family: 'Hiragino Mincho Pro', YuMincho, serif; font-weight: 900;">⚠️ ゲストモードの確認</h2>
+      <div style="text-align: left; font-size: 0.85rem; color: #475569; margin-bottom: 1.5rem; line-height: 1.7; font-weight: bold; background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div style="margin-bottom: 0.5rem; color: #bd2130;">• ゲストモードでは、ランキングへの参加はできません。</div>
+        <div style="margin-bottom: 0.5rem;">• 端末を跨いだデータの保存（同期）は行われません。</div>
+        <div style="margin-bottom: 0.5rem;">• アプリを削除したり、ブラウザのキャッシュをクリアすると、これまでのレベルや獲得したデザインのデータが消える場合があります。</div>
+        <div>• 記録を残したり、別の端末とデータを同期したい場合は、アカウントを作成してください。</div>
+      </div>
+      <div style="display: flex; gap: 0.8rem;">
+        <button onclick="closeGuestConsent()" style="flex: 1; padding: 0.65rem; background: #cbd5e1; color: #475569; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem;">もどる</button>
+        <button onclick="confirmGuestModeStart()" style="flex: 1; padding: 0.65rem; background: var(--theme-color); color: #fff; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem;">同意して開始</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Version Announcement Popup Modal -->
+  <div id="version-popup-modal" class="achievements-modal-overlay" style="display: none; z-index: 25000; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.65);">
+    <div class="level-up-box" style="width: 90%; max-width: 420px; border: 4px solid #b45309; background: #fffdf5; padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); border-radius: 16px; text-align: center;">
+      <h2 style="color: #92400e; font-size: 1.8rem; margin-bottom: 0.5rem; font-family: 'Hiragino Mincho Pro', YuMincho, serif; font-weight: 900;">📜 あたらしい機能のついか！</h2>
+      <p style="font-size: 0.85rem; color: #78350f; margin-bottom: 1.2rem; font-weight: bold;">
+        アプリがバージョンアップされたよ！<br>
+        さっそくあそんでみよう！
+      </p>
+      <div id="version-popup-content" style="text-align: left; background: #fff; border: 1px solid #fde68a; border-radius: 8px; padding: 0.8rem; font-size: 0.82rem; color: #451a03; max-height: 180px; overflow-y: auto; margin-bottom: 1.5rem; line-height: 1.6;">
+        <!-- content will be dynamically loaded -->
+      </div>
+      <button onclick="closeVersionPopup()" style="padding: 0.6rem 2rem; background: #b45309; color: #fff; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; font-size: 0.95rem; transition: background 0.2s;" onmouseover="this.style.background='#92400e'" onmouseout="this.style.background='#b45309'">
+        よんだ！
+      </button>
+    </div>
+  </div>
+  <header>
+    <div class="header-title-container">
+      <h1>黒田先生の百人一首</h1>
+      <div class="author">百人一首ver2</div>
+    </div>
+    <div class="header-widgets">
+      <div class="header-stats level-widget">
+        <div class="level-badge">Lv. <span id="header-level">1</span></div>
+        <div class="header-rank-badge" id="header-rank">見習い歌詠み</div>
+        <div class="xp-container">
+          <div class="xp-bar-outer">
+            <div class="xp-bar-inner" id="header-xp-bar" style="width: 0%;"></div>
+          </div>
+          <div class="xp-text"><span id="header-current-xp">0</span>/<span id="header-needed-xp">100</span> XP</div>
+        </div>
+      </div>
+      <div class="header-stats">
+        総取得札数: <span id="total-acquired-cards">0</span> 枚
+      </div>
+      <div id="header-user-widget" class="header-stats" style="display: none; align-items: center; gap: 0.6rem; background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.05); border-radius: 6px; padding: 0.2rem 0.6rem;">
+        <span style="font-size: 0.85rem; font-weight: bold; color: #334155;">👤 <span id="header-username">-</span></span> 
+        <button onclick="handleLogout()" style="padding: 0.25rem 0.5rem; font-size: 0.72rem; font-weight: bold; border-radius: 4px; border: 1px solid #fecaca; background: #fef2f2; cursor: pointer; color: #ef4444; transition: all 0.2s;">ログアウト</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <!-- Left Main Panel -->
+    <main>
+      <!-- 1. Start / Setup Screen -->
+      <div id="screen-start" class="view-screen active">
+        <div class="start-screen">
+          <!-- 巻物風お知らせ欄 (Makimono Announcement Board) -->
+          <div class="makimono-announcement">
+            <div class="makimono-inner">
+              <h3 class="makimono-title">
+                <span>📜 おしらせ（アップデート情報）</span>
+                <button class="makimono-scroll-btn" onclick="togglePastAnnouncements()" id="makimono-toggle-btn">かこのおしらせ</button>
+              </h3>
+              <div id="makimono-main-content">
+                <!-- Current notice will be dynamically generated from APP_UPDATES -->
+              </div>
+            </div>
+          </div>
+
+          <div class="app-intro">
+            <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">百人一首 練習モード</h2>
+            <p style="color: var(--text-muted); font-size: 0.95rem;">
+              五色百人一首の色分けに基づいた20枚の札で練習を行います。<br>
+              色を選び、モードを決定したら「スタート」を押してね！
+            </p>
+          </div>
+
+          <!-- Rank Progression Panel -->
+          <div class="rank-progression-panel" id="rank-progression-panel">
+            <div class="rank-progression-title">現在の称号</div>
+            <div class="rank-progression-current">
+              <span class="rank-progression-name" id="progression-rank-name">見習い歌詠み</span>
+              <span class="level-badge">Lv. <span id="progression-level-val">1</span></span>
+            </div>
+            <div class="rank-progression-desc" id="progression-rank-desc">
+              百人一首の世界へ第一歩を踏み出した、未来の歌詠みの卵！
+            </div>
+            <div class="rank-progression-next" id="progression-next-area">
+              <span>次の称号：<strong id="progression-next-name">中級歌詠み</strong> まで</span>
+              <span>あと <strong id="progression-levels-left" style="color: var(--color-orange);">5</strong> レベル</span>
+            </div>
+
+            <!-- Prominent Level Progress Bar -->
+            <div class="xp-progress-container" style="margin-top: 1rem; border-top: 1px dashed rgba(0,0,0,0.08); padding-top: 0.8rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: bold; margin-bottom: 0.35rem;">
+                <span style="color: var(--text-color);">現在の経験値 (XP)</span>
+                <span><span id="progression-xp-num">0</span> / <span id="progression-needed-xp-num">100</span> XP</span>
+              </div>
+              <div class="xp-bar-outer" style="height: 12px; background: rgba(0,0,0,0.05); border-radius: 6px; overflow: hidden; position: relative; border: 1px solid rgba(0,0,0,0.06);">
+                <div id="progression-xp-bar-inner" style="height: 100%; width: 0%; background: linear-gradient(90deg, var(--theme-color) 0%, #3b82f6 100%); transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 6px;"></div>
+              </div>
+              <div id="progression-to-next-level-desc" style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.3rem; text-align: right; font-weight: bold;">
+                次のレベルまで あと 100 XP
+              </div>
+            </div>
+
+            <div style="margin-top: 0.8rem; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(0,0,0,0.08); padding-top: 0.5rem; gap: 0.5rem;">
+              <a href="#" onclick="openGrowthRoadModal(); return false;" style="font-size: 0.82rem; font-weight: bold; color: var(--theme-color); text-decoration: underline; display: inline-flex; align-items: center; gap: 0.2rem;">
+                📈 成長の道
+              </a>
+              <a href="#" onclick="openAchievementsModal(); return false;" style="font-size: 0.82rem; font-weight: bold; color: var(--color-orange); text-decoration: underline; display: inline-flex; align-items: center; gap: 0.2rem;">
+                🏆 実績・称号
+              </a>
+              <a href="#" onclick="openSkinsModal(); return false;" style="font-size: 0.82rem; font-weight: bold; color: #10b981; text-decoration: underline; display: inline-flex; align-items: center; gap: 0.2rem;">
+                🎴 デザイン図鑑
+              </a>
+            </div>
+          </div>
+
+          <!-- AI Coach Diagnosis Panel -->
+          <div class="rank-progression-panel" id="coach-diagnosis-panel" style="margin-top: 1rem; border-left: 5px solid var(--color-orange); background: #fffcf8;">
+            <div class="rank-progression-title" style="color: var(--color-orange); display: flex; align-items: center; gap: 0.4rem; font-weight: bold;">
+              <span>💡 AI専属コーチの相性アドバイス</span>
+            </div>
+            <div id="coach-advice-text" style="font-size: 0.85rem; line-height: 1.5; color: #334155; margin-top: 0.4rem; font-weight: bold;">
+              練習を開始してデータを集めると、AI専属コーチが苦手札の分析と相性診断アドバイスを行います！
+            </div>
+          </div>
+
+          <!-- Learning Support Navigation Row -->
+          <div style="display: flex; gap: 0.6rem; margin: 1rem 0;">
+            <button class="setting-btn" onclick="openWeakCardsModal()" style="flex: 1; padding: 0.65rem; font-weight: bold; border: 1.5px solid var(--theme-color); color: var(--theme-color); background: #f0f7ff; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.3rem; font-size: 0.85rem;">
+              🎴 苦手札印刷ジェネレーター
+            </button>
+            <button class="setting-btn" onclick="openTeacherDashboard()" style="flex: 1; padding: 0.65rem; font-weight: bold; border: 1.5px solid #8b5cf6; color: #8b5cf6; background: #faf5ff; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.3rem; font-size: 0.85rem;">
+              🔑 黒田先生の秘密 of 部屋
+            </button>
+          </div>
+
+          <!-- Guest Mode Login Notice Banner -->
+          <div id="settings-guest-login-notice" style="display: none; background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 12px; padding: 1rem; margin: 1rem 0; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; box-shadow: var(--shadow-sm);">
+            <div style="font-size: 0.85rem; color: #b45309; font-weight: bold;">
+              ⚠️ 現在ゲストモードです（ランキング登録やネット保存はできません）
+            </div>
+            <button onclick="promptGuestToRegister()" style="padding: 0.45rem 1rem; background: #f59e0b; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.8rem; transition: background 0.2s;" onmouseover="this.style.background='#d97706'" onmouseout="this.style.background='#f59e0b'">
+              なまえを登録して保存する
+            </button>
+          </div>
+
+          <div class="selected-color-banner" id="current-color-banner">
+            青色の札（20枚）がセットされています
+          </div>
+
+          <!-- Game Settings -->
+          <div class="setting-group">
+
+            <div class="setting-title">テキスト表示設定</div>
+            <div class="setting-options">
+              <button class="setting-btn active" id="text-show" onclick="setTextDisplay(true)">
+                読み上げ文を表示
+              </button>
+              <button class="setting-btn" id="text-hide" onclick="setTextDisplay(false)">
+                読み上げ文を隠す
+              </button>
+            </div>
+
+            <div class="setting-title">読み上げ速度</div>
+            <div class="slider-container" style="margin-bottom: 1.5rem;">
+              <input type="range" id="speech-speed" min="0.7" max="1.5" step="0.1" value="1.0" oninput="updateSpeedLabel(this.value)">
+              <div class="slider-val"><span id="speed-label">1.0</span>倍速</div>
+            </div>
+
+            <div class="setting-title">おてつき制限（ゲームオーバー設定）</div>
+            <div class="setting-options" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+              <button class="setting-btn active" id="limit-0" onclick="setMissLimit(0)" style="flex: 1 1 auto; min-width: 80px; padding: 0.6rem 0.4rem; font-size: 0.85rem;">制限なし</button>
+              <button class="setting-btn" id="limit-1" onclick="setMissLimit(1)" style="flex: 1 1 auto; min-width: 80px; padding: 0.6rem 0.4rem; font-size: 0.85rem;">1回でアウト</button>
+              <button class="setting-btn" id="limit-3" onclick="setMissLimit(3)" style="flex: 1 1 auto; min-width: 80px; padding: 0.6rem 0.4rem; font-size: 0.85rem;">3回でアウト</button>
+              <button class="setting-btn" id="limit-5" onclick="setMissLimit(5)" style="flex: 1 1 auto; min-width: 80px; padding: 0.6rem 0.4rem; font-size: 0.85rem;">5回でアウト</button>
+              <button class="setting-btn" id="limit-10" onclick="setMissLimit(10)" style="flex: 1 1 auto; min-width: 80px; padding: 0.6rem 0.4rem; font-size: 0.85rem;">10回でアウト</button>
+            </div>
+          </div>
+
+          <button class="start-btn" onclick="startGame()">スタート</button>
+        </div>
+      </div>
+
+      <!-- 2. Active Play Screen -->
+      <div id="screen-play" class="view-screen">
+        <div class="game-status-bar">
+          <div class="status-item">
+            <span class="status-label">のこり</span>
+            <span class="status-val" id="cards-remaining">20</span><span style="font-size: 0.8rem; margin-left: 2px;">枚</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">経過時間</span>
+            <span class="status-val" id="play-timer">00:00.0</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">お手つき</span>
+            <span class="status-val" id="play-misses" style="color: #bd2130;">0</span><span style="font-size: 0.8rem; margin-left: 2px; color: #bd2130;">回</span>
+          </div>
+          <button onclick="retireGame()" style="padding: 0.4rem 0.8rem; border: none; border-radius: 6px; background: #ef4444; color: white; font-weight: bold; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 0.2rem; transition: background 0.2s; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+            🏳️ リタイア
+          </button>
+        </div>
+
+        <!-- Reader Section -->
+        <div class="reading-panel">
+          <div class="reading-content">
+            <div class="reading-label" id="current-reading-phase">上の句を読み上げています...</div>
+            <div class="reading-text" id="reading-text-display">（スタート中）</div>
+          </div>
+          <div class="audio-controls">
+            <div class="wave-container" id="reader-wave">
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+            </div>
+            <button class="circle-btn" onclick="replayAudio()" title="もう一度読み上げる">🔊</button>
+          </div>
+        </div>
+
+        <!-- Cards Area -->
+        <div class="cards-grid" id="playboard">
+          <!-- Cards injected by JS -->
+        </div>
+
+        <!-- Penalty Overlay -->
+        <div id="penalty-overlay" class="penalty-overlay" style="display: none;">
+          <div class="penalty-overlay-content">
+            <div class="penalty-overlay-title">⚠️ お手つき制限ペナルティ！</div>
+            <div class="penalty-overlay-subtitle">おちついて、よく聞いてから選ぼう！</div>
+            <div class="penalty-overlay-timer" id="penalty-overlay-timer">3</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Results Screen -->
+      <div id="screen-results" class="view-screen">
+        <div class="result-screen">
+          <div class="result-header">
+            <h2 style="font-size: 2.2rem; color: var(--theme-color);">クリア！</h2>
+            <div class="result-badge" id="result-clear-time">00:45.3</div>
+          </div>
+
+          <!-- Special Title Record Update Announcement -->
+          <div id="result-title-celebration" style="display: none; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 3px double #ffd700; border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; text-align: center; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2); animation: pulseGlow 2s infinite;">
+            <div style="font-size: 1.5rem; font-weight: 900; color: #d97706; text-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 0.3rem;">✨ 記録更新！ ✨</div>
+            <div style="font-size: 1rem; font-weight: bold; color: #78350f;">
+              特別称号獲得: <span id="celebration-title-name" style="font-size: 1.25rem; color: #b45309; text-shadow: 0 0 8px rgba(251,191,36,0.3); font-family: 'Hiragino Mincho Pro', YuMincho, serif; padding: 0.1rem 0.5rem; border-bottom: 2px solid #f59e0b;">-</span>
+              <span id="celebration-title-counter" style="background: #ef4444; color: #fff; font-size: 0.8rem; font-weight: 800; padding: 2px 6px; border-radius: 9999px; margin-left: 5px;">+1</span>
+            </div>
+            <div style="font-size: 0.85rem; color: #92400e; margin-top: 0.4rem; font-weight: bold;">実績メニューで獲得したデザインを確かめてみよう！</div>
+          </div>
+
+          <div class="result-stats-row">
+            <div class="result-stat-box">
+              <div class="result-stat-title">正解率</div>
+              <div class="result-stat-val" id="result-accuracy">100%</div>
+            </div>
+            <div class="result-stat-box">
+              <div class="result-stat-title">お手つき回数</div>
+              <div class="result-stat-val" id="result-misses" style="color: #bd2130;">0回</div>
+            </div>
+          </div>
+
+          <!-- Review List -->
+          <div class="review-section">
+            <h3>今回のまとめ・確認</h3>
+            <div class="review-list" id="review-list-container">
+              <!-- Review items injected by JS -->
+            </div>
+          </div>
+
+          <!-- Firebase Ranking Section -->
+          <div id="ranking-submission-panel" class="review-section" style="margin-top: 1.5rem; border-top: 1px solid #eee; padding-top: 1.5rem; text-align: center;">
+            <h3 style="font-size: 1.2rem; color: var(--theme-color); margin-bottom: 0.8rem;">🏆 リアルタイム順位表に登録</h3>
+            <div style="display: flex; gap: 0.8rem; justify-content: center; align-items: center; max-width: 400px; margin: 0 auto;">
+              <input type="text" id="ranking-name-input" placeholder="お名前を入力してね" style="flex: 1; padding: 0.6rem 1rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem;" />
+              <button class="start-btn" id="ranking-submit-btn" onclick="submitToRanking()" style="padding: 0.6rem 1.5rem; font-size: 1rem; border-radius: 8px; margin: 0;">送信する</button>
+            </div>
+            <p id="ranking-status-msg" style="font-size: 0.85rem; margin-top: 0.4rem; color: var(--text-muted);"></p>
+          </div>
+          
+          <!-- Guest Mode Ranking Disclaimer notice -->
+          <div id="ranking-guest-notice" class="review-section" style="margin-top: 1.5rem; border-top: 1px solid #eee; padding-top: 1.5rem; text-align: center; display: none; background: #fef2f2; border: 1.5px dashed #fca5a5; border-radius: 8px; padding: 1rem;">
+            <h3 style="font-size: 1.15rem; color: #ef4444; margin-bottom: 0.5rem; font-weight: bold;">🏆 ランキングの参加制限</h3>
+            <p style="font-size: 0.95rem; color: #bd2130; font-weight: bold; margin: 0;">
+              ランキングに参加するには、アカウントを作成してログインしてください
+            </p>
+            <p style="font-size: 0.8rem; color: #64748b; margin-top: 0.4rem;">
+              スタート画面のバナー、またはヘッダーのボタンからいつでもアカウントを作成できます。
+            </p>
+          </div>
+          
+          <div id="ranking-penalty-warning" class="review-section" style="margin-top: 1.5rem; border-top: 1px solid #eee; padding-top: 1.5rem; text-align: center; display: none;">
+            <h3 style="font-size: 1.2rem; color: #ef4444; margin-bottom: 0.5rem;">⚠️ 順位表に登録できません</h3>
+            <p style="font-size: 0.95rem; color: #475569; font-weight: bold;">連続でお手つきペナルティが発生したため、今回の記録は順位表に登録できません。</p>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">次はよく聞いて、一枚ずつ大切に選んでみよう！</p>
+          </div>
+
+          <div class="result-actions">
+            <button class="secondary-btn" onclick="showScreen('start')">トップに戻る</button>
+            <button class="start-btn" onclick="startGame()">もう一度遊ぶ</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Game Over Screen -->
+      <div id="screen-game-over" class="view-screen">
+        <div class="result-screen" style="border-top: 6px solid #bd2130;">
+          <div class="result-header">
+            <h2 style="font-size: 2.2rem; color: #bd2130;">ゲームオーバー</h2>
+            <div class="result-badge" style="background-color: #bd2130; color: #ffffff;">お手つき制限を超えました</div>
+          </div>
+
+          <div class="result-stats-row">
+            <div class="result-stat-box">
+              <div class="result-stat-title">取れた札の数</div>
+              <div class="result-stat-val"><span id="game-over-acquired">0</span> / 20 枚</div>
+            </div>
+            <div class="result-stat-box">
+              <div class="result-stat-title">おてつき数</div>
+              <div class="result-stat-val" style="color: #bd2130;" id="game-over-misses">0回</div>
+            </div>
+          </div>
+
+          <p style="margin: 1.5rem 0; color: var(--text-muted); font-size: 1.1rem; text-align: center;">
+            あきらめずに、もう一度チャレンジしてみよう！練習すれば必ず上手になるよ！
+          </p>
+
+          <div class="result-actions">
+            <button class="secondary-btn" onclick="showScreen('start')">トップに戻る</button>
+            <button class="start-btn" style="background-color: #bd2130; border-color: #bd2130;" onclick="startGame()">もう一度挑戦する</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Right Sidebar Panel -->
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <h2>色の選択</h2>
+        <div class="goshiki-btn-grid">
+          <button class="goshiki-btn btn-blue active" id="color-blue" onclick="selectColor('blue')">
+            <span>青色の札</span>
+            <span class="btn-badge">20枚</span>
+          </button>
+          <button class="goshiki-btn btn-pink" id="color-pink" onclick="selectColor('pink')">
+            <span>ピンクの札</span>
+            <span class="btn-badge">20枚</span>
+          </button>
+          <button class="goshiki-btn btn-yellow" id="color-yellow" onclick="selectColor('yellow')">
+            <span>黄色の札</span>
+            <span class="btn-badge">20枚</span>
+          </button>
+          <button class="goshiki-btn btn-green" id="color-green" onclick="selectColor('green')">
+            <span>緑色の札</span>
+            <span class="btn-badge">20枚</span>
+          </button>
+          <button class="goshiki-btn btn-orange" id="color-orange" onclick="selectColor('orange')">
+            <span>オレンジの札</span>
+            <span class="btn-badge">20枚</span>
+          </button>
+          <button class="goshiki-btn btn-chaos" id="color-chaos" onclick="selectColor('chaos')">
+            <span>💥 カオスモード</span>
+            <span class="btn-badge">100枚</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h2>ベストタイムと記録</h2>
+        <div id="best-records-list">
+          <div class="history-item">
+            <span><span class="history-color-indicator btn-blue"></span>青色:</span>
+            <span id="best-blue" style="font-weight: bold;">--:--.- (お手つき: --)</span>
+          </div>
+          <div class="history-item">
+            <span><span class="history-color-indicator btn-pink"></span>ピンク:</span>
+            <span id="best-pink" style="font-weight: bold;">--:--.- (お手つき: --)</span>
+          </div>
+          <div class="history-item">
+            <span><span class="history-color-indicator btn-yellow"></span>黄色:</span>
+            <span id="best-yellow" style="font-weight: bold;">--:--.- (お手つき: --)</span>
+          </div>
+          <div class="history-item">
+            <span><span class="history-color-indicator btn-green"></span>緑色:</span>
+            <span id="best-green" style="font-weight: bold;">--:--.- (お手つき: --)</span>
+          </div>
+          <div class="history-item">
+            <span><span class="history-color-indicator btn-orange"></span>橙色:</span>
+            <span id="best-orange" style="font-weight: bold;">--:--.- (お手つき: --)</span>
+          </div>
+          <div class="history-item">
+            <span><span class="history-color-indicator" style="background: linear-gradient(135deg, #4f46e5, #db2777); display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 0.5rem;"></span>カオス:</span>
+            <span id="best-chaos" style="font-weight: bold;">--:--.- (お手つき: --)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h2 style="border-left-color: #ffd700;">🏆 リアルタイム順位表</h2>
+        <!-- Ranking Renewal Banner -->
+        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%); border: 1px solid #fde68a; border-radius: 8px; padding: 0.6rem 0.8rem; margin-bottom: 0.8rem; font-size: 0.8rem; line-height: 1.4; color: #78350f; font-weight: bold; text-align: center; box-shadow: var(--shadow-sm);">
+          ✨ 今月の新ランキング開催中！ ✨<br>
+          <span style="font-size: 0.72rem; color: #92400e; font-weight: normal;">アップデートを記念して順位表が新しくなりました！みんなで一番を目指そう！</span>
+        </div>
+        <!-- Tabs to switch color rankings -->
+        <div class="ranking-tabs" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; margin-bottom: 0.8rem; background: rgba(0,0,0,0.05); padding: 2px; border-radius: 6px;">
+          <button class="rank-tab-btn active" id="tab-rank-blue" onclick="switchRankingTab('blue')" style="padding: 0.35rem 0; font-size: 0.72rem; border: none; border-radius: 4px; background: var(--theme-color); color: #fff; cursor: pointer; font-weight: bold; transition: all 0.2s; text-align: center;">青</button>
+          <button class="rank-tab-btn" id="tab-rank-pink" onclick="switchRankingTab('pink')" style="padding: 0.35rem 0; font-size: 0.72rem; border: none; border-radius: 4px; background: transparent; color: var(--text-color); cursor: pointer; font-weight: bold; transition: all 0.2s; text-align: center;">桃</button>
+          <button class="rank-tab-btn" id="tab-rank-yellow" onclick="switchRankingTab('yellow')" style="padding: 0.35rem 0; font-size: 0.72rem; border: none; border-radius: 4px; background: transparent; color: var(--text-color); cursor: pointer; font-weight: bold; transition: all 0.2s; text-align: center;">黄</button>
+          <button class="rank-tab-btn" id="tab-rank-green" onclick="switchRankingTab('green')" style="padding: 0.35rem 0; font-size: 0.72rem; border: none; border-radius: 4px; background: transparent; color: var(--text-color); cursor: pointer; font-weight: bold; transition: all 0.2s; text-align: center;">緑</button>
+          <button class="rank-tab-btn" id="tab-rank-orange" onclick="switchRankingTab('orange')" style="padding: 0.35rem 0; font-size: 0.72rem; border: none; border-radius: 4px; background: transparent; color: var(--text-color); cursor: pointer; font-weight: bold; transition: all 0.2s; text-align: center;">橙</button>
+          
+          <button class="rank-tab-btn" id="tab-rank-mix_40" onclick="switchRankingTab('mix_40')" style="padding: 0.35rem 0; font-size: 0.72rem; border: none; border-radius: 4px; background: transparent; color: var(--text-color); cursor: pointer; font-weight: bold; transition: all 0.2s; text-align: center;">混40</button>
+          <button class="rank-tab-btn" id="tab-rank-mix_60" onclick="switchRankingTab('mix_60')" style="padding: 0.35rem 0; font-size: 0.72rem; border: none; border-radius: 4px; background: transparent; color: var(--text-color); cursor: pointer; font-weight: bold; transition: all 0.2s; text-align: center;">混60</button>
+          <button class="rank-tab-btn" id="tab-rank-mix_80" onclick="switchRankingTab('mix_80')" style="padding: 0.35rem 0; font-size: 0.72rem; border: none; border-radius: 4px; background: transparent; color: var(--text-color); cursor: pointer; font-weight: bold; transition: all 0.2s; text-align: center;">混80</button>
+          <button class="rank-tab-btn" id="tab-rank-chaos" onclick="switchRankingTab('chaos')" style="grid-column: span 2; padding: 0.35rem 0; font-size: 0.72rem; border: none; border-radius: 4px; background: transparent; color: var(--text-color); cursor: pointer; font-weight: bold; transition: all 0.2s; text-align: center;">乱</button>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; gap: 0.5rem; flex-wrap: wrap;">
+          <div id="ranking-title-label" style="font-size: 0.82rem; font-weight: bold; color: var(--theme-color); text-align: left; margin: 0;">青色の札</div>
+          <!-- Sort Buttons -->
+          <div style="display: flex; gap: 2px; align-items: center;">
+            <button id="sort-rank-time" onclick="setRankingSort('time')" style="padding: 0.2rem 0.4rem; font-size: 0.68rem; border-radius: 4px; border: 1.5px solid var(--theme-color); background: var(--theme-color); color: #fff; font-weight: bold; cursor: pointer; transition: all 0.2s;">タイム順</button>
+            <button id="sort-rank-date" onclick="setRankingSort('date')" style="padding: 0.2rem 0.4rem; font-size: 0.68rem; border-radius: 4px; border: 1.5px solid #cbd5e1; background: #fff; color: #475569; font-weight: bold; cursor: pointer; transition: all 0.2s;">最新順</button>
+          </div>
+        </div>
+        
+        <div id="ranking-table-header" style="display: grid; grid-template-columns: 20px 1fr 55px 58px; gap: 4px; font-size: 0.68rem; color: #64748b; font-weight: bold; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 0.25rem; margin-bottom: 0.4rem;">
+          <span style="text-align: center;">順</span>
+          <span>なまえ・称号</span>
+          <span style="text-align: right;">記録</span>
+          <span style="text-align: right;">日付</span>
+        </div>
+
+        <div id="ranking-list" style="display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.85rem;">
+          <div style="text-align: center; color: var(--text-muted); padding: 0.5rem 0;">接続中...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <script src="poems_data.js"></script>
+  <script src="app.js"></script>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+    import { getDatabase, ref, push, onValue, query, orderByChild, limitToFirst, runTransaction, get, set, update } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+
+    // -------------------------------------------------------------
+    // Firebase Project Configuration
+    // -------------------------------------------------------------
+    // [!] あなたのFirebaseプロジェクト設定情報をここに埋め込んでください。
+    const firebaseConfig = {
+      apiKey: "AIzaSyBlwrmX6nd7DWL5W0kZMF_4uTxBmY5htjs",
+      authDomain: "hyakuninnisshu-c4753.firebaseapp.com",
+      databaseURL: "https://hyakuninnisshu-c4753-default-rtdb.firebaseio.com",
+      projectId: "hyakuninnisshu-c4753",
+      storageBucket: "hyakuninnisshu-c4753.firebasestorage.app",
+      messagingSenderId: "26278689084",
+      appId: "1:26278689084:web:dd236732b2acdc71bfc639"
+    };
+
+    window.firebaseConfig = firebaseConfig;
+
+    let db = null;
+    let currentUnsubscribe = null;
+
+    window.initFirebase = function(config) {
+      if (!config || config.apiKey === "YOUR_API_KEY" || config.apiKey === "" || !config.databaseURL) {
+        console.warn("Firebase config placeholders are not replaced yet.");
+        const container = document.getElementById('ranking-list');
+        if (container) {
+          container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 0.5rem 0; font-size: 0.8rem; line-height: 1.4;">
+            ※Firebase設定が未設定です。<br>コード内の <code>firebaseConfig</code> を<br>更新すると順位表が有効になります。
+          </div>`;
+        }
+        return;
+      }
+      try {
+        const app = initializeApp(config);
+        db = getDatabase(app);
+        window.listenToRankings();
+      } catch (e) {
+        console.error("Firebase init failed, check config", e);
+        const container = document.getElementById('ranking-list');
+        if (container) {
+          container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 0.5rem 0;">※Firebaseの初期化に失敗しました。</div>`;
+        }
+      }
+    };
+
+    window.submitRecordToFirebase = function(name, timeMs, misses, mode) {
+      if (!db) {
+        return Promise.reject("Firebase not initialized");
+      }
+      const rankingRef = ref(db, `rankings_v3/${mode}`);
+
+      let currentLevel = 1;
+      let equippedIcons = [];
+      try {
+        const xp = parseInt(window.goshikiStorage.getItem('goshiki_xp') || '0');
+        if (typeof window.getLevel === 'function') {
+          currentLevel = window.getLevel(xp);
+        } else {
+          if (xp < 9900) {
+            currentLevel = Math.floor(xp / 100) + 1;
+          } else if (xp < 24750) {
+            currentLevel = 100 + Math.floor((xp - 9900) / 150) + 1;
+          } else {
+            currentLevel = 200 + Math.floor((xp - 24750) / 200) + 1;
+          }
+        }
+      } catch(e) {}
+
+      try {
+        const equippedKeys = JSON.parse(window.goshikiStorage.getItem('goshiki_equipped_titles') || '[]');
+        if (typeof window.getAllTitles === 'function') {
+          const allTitles = window.getAllTitles();
+          equippedKeys.forEach(k => {
+            const t = allTitles.find(item => item.key === k);
+            if (t) equippedIcons.push(t.icon);
+          });
+        }
+      } catch(e) {}
+
+      return push(rankingRef, {
+        name: name,
+        time: timeMs,
+        misses: misses,
+        mode: mode,
+        date: Date.now(),
+        timestamp: new Date().toISOString(),
+        level: currentLevel,
+        equipped_titles: equippedIcons
+      });
+    };
+
+    window.checkIfNewGlobalTopRecord = function(mode, timeMs) {
+      if (!db) return Promise.resolve(false);
+      const topQuery = query(ref(db, `rankings_v3/${mode}`), orderByChild('time'), limitToFirst(1));
+      return get(topQuery).then(snapshot => {
+        if (!snapshot.exists()) {
+          return true; // No records exist, so this will be #1
+        }
+        let topVal = null;
+        snapshot.forEach(child => {
+          topVal = child.val();
+        });
+        return (topVal && timeMs < topVal.time);
+      }).catch(() => false);
+    };
+
+    window.listenToRankings = function(mode) {
+      if (!db) return;
+      if (currentUnsubscribe) {
+        currentUnsubscribe();
+      }
+      
+      let modeKey = mode || selectedColor;
+      if (modeKey === 'mix') {
+        const cnt = currentSet.length || 0;
+        if (cnt === 60) {
+          modeKey = 'mix_60';
+        } else if (cnt === 80) {
+          modeKey = 'mix_80';
+        } else {
+          modeKey = 'mix_40';
+        }
+      }
+      
+      // Update tab selection indicator states
+      const colors = ['blue', 'pink', 'yellow', 'green', 'orange', 'mix_40', 'mix_60', 'mix_80', 'chaos'];
+      colors.forEach(col => {
+        const btn = document.getElementById(`tab-rank-${col}`);
+        if (btn) {
+          if (col === modeKey) {
+            btn.style.background = 'var(--theme-color)';
+            btn.style.color = '#fff';
+          } else {
+            btn.style.background = 'transparent';
+            btn.style.color = 'var(--text-color)';
+          }
+        }
+      });
+
+      let labelText = '';
+      if (modeKey === 'mix_40') {
+        labelText = 'ミックス40枚（上位5名）';
+      } else if (modeKey === 'mix_60') {
+        labelText = 'ミックス60枚（上位5名）';
+      } else if (modeKey === 'mix_80') {
+        labelText = 'ミックス80枚（上位5名）';
+      } else if (modeKey === 'chaos') {
+        labelText = 'カオス（上位5名）';
+      } else {
+        const nameMap = { blue: '青色の札', pink: 'ピンクの札', yellow: '黄色の札', green: '緑色の札', orange: 'オレンジの札' };
+        labelText = `${nameMap[modeKey] || '選択中'}（上位5名）`;
+      }
+      
+      const labelEl = document.getElementById('ranking-title-label');
+      if (labelEl) labelEl.textContent = labelText;
+      
+      const rankingRef = ref(db, `rankings_v3/${modeKey}`);
+      const rankingQuery = query(rankingRef, orderByChild('time'), limitToFirst(50));
+      
+      const container = document.getElementById('ranking-list');
+      
+      currentUnsubscribe = onValue(rankingQuery, (snapshot) => {
+        container.innerHTML = '';
+        const records = [];
+        snapshot.forEach((child) => {
+          records.push(child.val());
+        });
+        
+        if (window.rankingSortKey === 'date') {
+          records.sort((a, b) => {
+            const timeA = a.timestamp ? new Date(a.timestamp).getTime() : (a.date || 0);
+            const timeB = b.timestamp ? new Date(b.timestamp).getTime() : (b.date || 0);
+            if (timeB !== timeA) return timeB - timeA;
+            return a.time - b.time;
+          });
+        } else {
+          records.sort((a, b) => {
+            if (a.time !== b.time) return a.time - b.time;
+            if (a.misses !== b.misses) return a.misses - b.misses;
+            const timeA = a.timestamp ? new Date(a.timestamp).getTime() : (a.date || 0);
+            const timeB = b.timestamp ? new Date(b.timestamp).getTime() : (b.date || 0);
+            return timeB - timeA;
+          });
+        }
+
+        const sliced = records.slice(0, 5);
+        
+        if (sliced.length === 0) {
+          container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 0.5rem 0;">まだ記録がありません。<br>最初の挑戦者になろう！</div>`;
+          return;
+        }
+        
+        sliced.forEach((rec, idx) => {
+          let displayName = rec.name;
+          if (window.containsInappropriateWords && window.containsInappropriateWords(displayName)) {
+            displayName = "***";
+          }
+          
+          const row = document.createElement('div');
+          row.style.display = 'grid';
+          row.style.gridTemplateColumns = '20px 1fr 55px 58px';
+          row.style.gap = '4px';
+          row.style.alignItems = 'center';
+          row.style.padding = '0.35rem 0.2rem';
+          row.style.borderRadius = '6px';
+          row.style.background = idx % 2 === 0 ? 'rgba(0,0,0,0.02)' : 'transparent';
+          row.style.borderLeft = idx === 0 ? '3px solid #ffd700' : '3px solid transparent';
+          
+          let medal = `${idx + 1}`;
+          if (idx === 0) medal = '🥇';
+          else if (idx === 1) medal = '🥈';
+          else if (idx === 2) medal = '🥉';
+          
+          const totalSeconds = (rec.time / 1000).toFixed(1);
+          const dateStr = rec.timestamp ? window.formatDate(rec.timestamp) : (rec.date ? window.formatDate(rec.date) : '----/--/--');
+          
+          row.innerHTML = `
+            <span style="font-weight: bold; font-size: 0.8rem; text-align: center; display: inline-block;">${medal}</span>
+            <div style="display: flex; flex-direction: column; min-width: 0; line-height: 1.2;">
+              <div style="display: flex; align-items: center; gap: 2px;">
+                <span style="font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60px; font-size: 0.78rem;">${escapeHTML(displayName)}</span>
+                <span style="font-size: 0.62rem; color: #64748b; font-weight: normal; background: #e2e8f0; padding: 1px 2px; border-radius: 3px;">L${rec.level || 1}</span>
+              </div>
+              <div style="display: flex; gap: 1px; align-items: center; margin-top: 1px;">
+                ${(rec.equipped_titles || []).map(icon => `<span style="font-size: 0.68rem; line-height: 1;" title="称号">${icon}</span>`).join('')}
+              </div>
+            </div>
+            <div style="font-family: monospace; font-weight: bold; color: var(--theme-color); font-size: 0.75rem; text-align: right; line-height: 1.2;">
+              <div>${totalSeconds}秒</div>
+              <div style="font-size: 0.65rem; font-weight: normal; color: #64748b;">(${rec.misses}回)</div>
+            </div>
+            <div style="font-family: monospace; font-size: 0.65rem; color: #64748b; text-align: right; align-self: center;">
+              ${dateStr}
+            </div>
+          `;
+          container.appendChild(row);
+        });
+      }, (error) => {
+        console.error("Firebase fetch error", error);
+        container.innerHTML = `<div style="text-align: center; color: #bd2130; padding: 0.5rem 0;">接続エラーが発生しました</div>`;
+      });
+    };
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+
+    window.submitMissStatsToFirebase = function(missMap) {
+      if (!db || !missMap) return;
+      Object.keys(missMap).forEach(cardNo => {
+        const count = missMap[cardNo];
+        const missRef = ref(db, `miss_stats_v3/${cardNo}`);
+        runTransaction(missRef, (currentValue) => {
+          return (currentValue || 0) + count;
+        });
+      });
+    };
+
+    window.getTeacherDashboardStats = function() {
+      if (!db) return Promise.resolve({});
+      const statsRef = ref(db, 'miss_stats_v3');
+      return get(statsRef).then((snapshot) => {
+        return snapshot.val() || {};
+      });
+    };
+
+    let currentUserKey = null;
+    let isSyncing = false;
+
+    window.syncItemToFirebase = function(key, value) {
+      if (db && currentUserKey && !isSyncing) {
+        set(ref(db, `users/${currentUserKey}/${key}`), value);
+      }
+    };
+
+    window.syncRemoveFromFirebase = function(key) {
+      if (db && currentUserKey && !isSyncing) {
+        set(ref(db, `users/${currentUserKey}/${key}`), null);
+      }
+    };
+
+    window.syncClearFirebase = function() {
+      if (db && currentUserKey && !isSyncing) {
+        set(ref(db, `users/${currentUserKey}`), null);
+      }
+    };
+
+    window.handleLoginSubmit = function() {
+      const nameInput = document.getElementById('login-name-input');
+      const pinInput = document.getElementById('login-pin-input');
+      const statusMsg = document.getElementById('login-status-msg');
+      const submitBtn = document.getElementById('login-submit-btn');
+
+      if (!nameInput || !pinInput || !statusMsg || !submitBtn) return;
+
+      const name = nameInput.value.trim();
+      const pin = pinInput.value.trim();
+
+      if (!name) {
+        statusMsg.textContent = '❌ お名前を入力してください。';
+        return;
+      }
+      if (!/^\d{4}$/.test(pin)) {
+        statusMsg.textContent = '❌ 4桁の数字の合言葉を入力してください。';
+        return;
+      }
+
+      statusMsg.style.color = '#3b82f6';
+      statusMsg.textContent = '🔄 接続中...';
+      submitBtn.disabled = true;
+
+      const sanitizedName = name.replace(/[\.\$#\[\]\/]/g, '_');
+      const userKey = `${sanitizedName}_${pin}`;
+
+      // Check if user node exists on Firebase
+      get(ref(db, `users/${userKey}`)).then(snapshot => {
+        if (snapshot.exists()) {
+          // Existing user - Sync down
+          statusMsg.textContent = '🔄 データを同期しています...';
+          const data = snapshot.val();
+          isSyncing = true;
+          Object.keys(data).forEach(k => {
+            if (k.startsWith('goshiki_')) {
+              baseGoshikiStorage.setItem(k, data[k]);
+            }
+          });
+          // Reload everything
+          if (typeof loadLevelData === 'function') loadLevelData();
+          if (typeof loadRecords === 'function') loadRecords();
+          if (typeof updateTotalAcquiredCount === 'function') updateTotalAcquiredCount();
+          isSyncing = false;
+          
+          statusMsg.style.color = '#22c55e';
+          statusMsg.textContent = '✅ ログイン成功！';
+          
+          setTimeout(() => {
+            completeLogin(userKey, name);
+          }, 600);
+        } else {
+          // New user - Upload local data
+          statusMsg.textContent = '📝 新規登録中...';
+          const localData = {
+            nickname: name,
+            pin: pin
+          };
+          for (let i = 0; i < baseGoshikiStorage.length; i++) {
+            const k = baseGoshikiStorage.key(i);
+            if (k && k.startsWith('goshiki_')) {
+              localData[k] = baseGoshikiStorage.getItem(k);
+            }
+          }
+          
+          set(ref(db, `users/${userKey}`), localData).then(() => {
+            statusMsg.style.color = '#22c55e';
+            statusMsg.textContent = '✅ 登録完了しました！';
+            setTimeout(() => {
+              completeLogin(userKey, name);
+            }, 600);
+          }).catch(err => {
+            submitBtn.disabled = false;
+            statusMsg.style.color = '#ef4444';
+            statusMsg.textContent = '❌ 登録に失敗しました。';
+            console.error(err);
+          });
+        }
+      }).catch(err => {
+        submitBtn.disabled = false;
+        statusMsg.style.color = '#ef4444';
+        statusMsg.textContent = '❌ 接続エラーが発生しました。';
+        console.error(err);
+      });
+    };
+
+    function completeLogin(userKey, name) {
+      window.isGuestMode = false;
+      baseGoshikiStorage.removeItem('goshiki_is_guest_mode');
+
+      currentUserKey = userKey;
+      baseGoshikiStorage.setItem('goshiki_current_user_key', userKey);
+      baseGoshikiStorage.setItem('goshiki_current_username', name);
+
+      const widget = document.getElementById('header-user-widget');
+      if (widget) widget.style.display = 'flex';
+      if (typeof updateHeaderUserDisplay === 'function') {
+        updateHeaderUserDisplay();
+      }
+
+      // Hide login modal
+      const modal = document.getElementById('login-modal');
+      if (modal) modal.style.display = 'none';
+
+      // Re-load UI elements
+      if (typeof checkSkinUnlocks === 'function') checkSkinUnlocks();
+      
+      // Also fetch and load ranking immediately
+      if (typeof window.listenToRankings === 'function') {
+        window.listenToRankings();
+      }
+    }
+
+    window.handleLogout = function() {
+      if (!confirm("本当にログアウトしますか？\n端末内のキャッシュデータがリセットされます。")) return;
+      
+      currentUserKey = null;
+      baseGoshikiStorage.clear();
+      
+      // Reset user header widget
+      const nameEl = document.getElementById('header-username');
+      const widget = document.getElementById('header-user-widget');
+      if (nameEl) nameEl.textContent = '-';
+      if (widget) widget.style.display = 'none';
+
+      // Clear inputs
+      document.getElementById('login-name-input').value = '';
+      document.getElementById('login-pin-input').value = '';
+      const statusMsg = document.getElementById('login-status-msg');
+      if (statusMsg) statusMsg.textContent = '';
+      const submitBtn = document.getElementById('login-submit-btn');
+      if (submitBtn) submitBtn.disabled = false;
+
+      // Show login modal
+      const modal = document.getElementById('login-modal');
+      if (modal) modal.style.display = 'flex';
+
+      // Re-load defaults
+      if (typeof loadLevelData === 'function') loadLevelData();
+      if (typeof loadRecords === 'function') loadRecords();
+      if (typeof updateTotalAcquiredCount === 'function') updateTotalAcquiredCount();
+    };
+
+    window.handleTeacherPinReset = function() {
+      const nameInput = document.getElementById('reset-pin-name');
+      const pinInput = document.getElementById('reset-pin-val');
+      const statusEl = document.getElementById('reset-pin-status');
+
+      if (!nameInput || !pinInput || !statusEl) return;
+
+      const name = nameInput.value.trim();
+      const newPin = pinInput.value.trim();
+
+      if (!name) {
+        statusEl.style.color = '#ef4444';
+        statusEl.textContent = '❌ お名前を入力してください。';
+        return;
+      }
+      if (!/^\d{4}$/.test(newPin)) {
+        statusEl.style.color = '#ef4444';
+        statusEl.textContent = '❌ 4桁の合言葉(PIN)を入力してください。';
+        return;
+      }
+
+      statusEl.style.color = '#8b5cf6';
+      statusEl.textContent = '🔄 検索中...';
+
+      // Fetch all users to find the matching nickname
+      get(ref(db, 'users')).then(snapshot => {
+        if (!snapshot.exists()) {
+          statusEl.style.color = '#ef4444';
+          statusEl.textContent = '❌ 登録されているユーザーがいません。';
+          return;
+        }
+
+        let foundNodeKey = null;
+        let userData = null;
+
+        snapshot.forEach(child => {
+          const val = child.val();
+          if (val.nickname && val.nickname.trim().toLowerCase() === name.toLowerCase()) {
+            foundNodeKey = child.key;
+            userData = val;
+          }
+        });
+
+        if (!foundNodeKey) {
+          statusEl.style.color = '#ef4444';
+          statusEl.textContent = '❌ 該当するニックネームが見つかりません。';
+          return;
+        }
+
+        // Renaming: Delete old node, set new key
+        const sanitizedName = name.replace(/[\.\$#\[\]\/]/g, '_');
+        const newKey = `${sanitizedName}_${newPin}`;
+        userData.pin = newPin;
+
+        statusEl.textContent = '🔄 新しい合言葉に更新しています...';
+
+        set(ref(db, `users/${foundNodeKey}`), null).then(() => {
+          set(ref(db, `users/${newKey}`), userData).then(() => {
+            statusEl.style.color = '#22c55e';
+            statusEl.textContent = `✅ ${name} さんの合言葉を「${newPin}」に変更しました！`;
+            nameInput.value = '';
+            pinInput.value = '';
+          });
+        }).catch(err => {
+          statusEl.style.color = '#ef4444';
+          statusEl.textContent = '❌ 更新中にエラーが発生しました。';
+          console.error(err);
+        });
+      }).catch(err => {
+        statusEl.style.color = '#ef4444';
+        statusEl.textContent = '❌ 接続エラーが発生しました。';
+        console.error(err);
+      });
+    };
+
+    // Auto-login at page load
+    function checkCachedLogin() {
+      if (goshikiStorage.getItem('goshiki_is_guest_mode') === 'true') {
+        window.isGuestMode = true;
+        
+        const modal = document.getElementById('login-modal');
+        if (modal) modal.style.display = 'none';
+        
+        const widget = document.getElementById('header-user-widget');
+        if (widget) widget.style.display = 'flex';
+        if (typeof updateHeaderUserDisplay === 'function') {
+          updateHeaderUserDisplay();
+        }
+        return;
+      }
+
+      const cachedKey = baseGoshikiStorage.getItem('goshiki_current_user_key');
+      const cachedName = baseGoshikiStorage.getItem('goshiki_current_username');
+      
+      if (cachedKey && cachedName) {
+        currentUserKey = cachedKey;
+        const widget = document.getElementById('header-user-widget');
+        if (widget) widget.style.display = 'flex';
+        if (typeof updateHeaderUserDisplay === 'function') {
+          updateHeaderUserDisplay();
+        }
+
+        // Hide login modal
+        const modal = document.getElementById('login-modal');
+        if (modal) modal.style.display = 'none';
+
+        // Background sync update from Firebase
+        setTimeout(() => {
+          if (!db) return;
+          isSyncing = true;
+          get(ref(db, `users/${cachedKey}`)).then(snapshot => {
+            if (snapshot.exists()) {
+              const data = snapshot.val();
+              Object.keys(data).forEach(k => {
+                if (k.startsWith('goshiki_')) {
+                  baseGoshikiStorage.setItem(k, data[k]);
+                }
+              });
+              if (typeof loadLevelData === 'function') loadLevelData();
+              if (typeof loadRecords === 'function') loadRecords();
+              if (typeof updateTotalAcquiredCount === 'function') updateTotalAcquiredCount();
+              if (typeof checkSkinUnlocks === 'function') checkSkinUnlocks();
+            }
+            isSyncing = false;
+          }).catch(() => { isSyncing = false; });
+        }, 1000);
+      }
+    }
+
+    // Initialize with config
+    window.initFirebase = function(config) {
+      if (!config || config.apiKey === "YOUR_API_KEY" || config.apiKey === "" || !config.databaseURL) {
+        console.warn("Firebase config placeholders are not replaced yet.");
+        const container = document.getElementById('ranking-list');
+        if (container) {
+          container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 0.5rem 0; font-size: 0.8rem; line-height: 1.4;">
+            ※Firebase設定が未設定です。<br>コード内の <code>firebaseConfig</code> を<br>更新すると順位表が有効になります。
+          </div>`;
+        }
+        return;
+      }
+      try {
+        const app = initializeApp(config);
+        db = getDatabase(app);
+        window.listenToRankings();
+        checkCachedLogin();
+      } catch (e) {
+        console.error("Firebase init failed, check config", e);
+        const container = document.getElementById('ranking-list');
+        if (container) {
+          container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 0.5rem 0;">※Firebaseの初期化に失敗しました。</div>`;
+        }
+      }
+    };
+
+    window.initFirebase(firebaseConfig);
+  </script>
+
+  <!-- Achievements Modal -->
+  <div id="achievements-modal" class="achievements-modal-overlay" onclick="if(event.target === this) closeAchievementsModal();">
+    <div class="achievements-modal-box">
+      <div class="achievements-modal-header">
+        <h3 style="font-weight: bold; color: var(--color-orange);">🏆 獲得実績・隠し称号 🏆</h3>
+        <button class="close-modal-btn" onclick="closeAchievementsModal()">&times;</button>
+      </div>
+      <div class="achievements-modal-body" style="display: flex; flex-direction: column; max-height: 75vh;">
+        <!-- Modal Tabs -->
+        <div style="display: flex; gap: 4px; margin-bottom: 1.2rem; background: rgba(0,0,0,0.05); padding: 4px; border-radius: 8px; shrink: 0;">
+          <button id="ach-tab-list" onclick="switchAchTab('list')" style="flex: 1; padding: 0.6rem; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; background: var(--color-orange); color: #fff; transition: all 0.2s; font-size: 0.9rem;">
+            🏆 獲得実績・称号
+          </button>
+          <button id="ach-tab-book" onclick="switchAchTab('book')" style="flex: 1; padding: 0.6rem; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; background: transparent; color: var(--text-color); transition: all 0.2s; font-size: 0.9rem;">
+            🎴 百人一首 札図鑑
+          </button>
+        </div>
+
+        <!-- Tab 1 Content: Achievements & Titles -->
+        <div id="ach-content-list" style="display: block; overflow-y: auto; flex: 1; padding-right: 0.2rem;">
+          <!-- Title Equipment Slots Widget -->
+          <div style="background: #faf5ff; border: 1.5px dashed #8b5cf6; border-radius: 12px; padding: 0.8rem; margin-bottom: 1.2rem; display: flex; flex-direction: column; gap: 0.6rem; shrink: 0;">
+            <div style="font-size: 0.85rem; font-weight: bold; color: #6d28d9; display: flex; align-items: center; gap: 4px;">
+              👑 装備中の称号（最大3つまで装備中）
+            </div>
+            <div style="display: flex; gap: 0.8rem; justify-content: space-around; align-items: center;">
+              <div id="equipped-slot-1" onclick="unequipSlot(0)" style="flex: 1; height: 50px; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;" title="タップで外す">
+                <!-- Slot 1 -->
+              </div>
+              <div id="equipped-slot-2" onclick="unequipSlot(1)" style="flex: 1; height: 50px; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;" title="タップで外す">
+                <!-- Slot 2 -->
+              </div>
+              <div id="equipped-slot-3" onclick="unequipSlot(2)" style="flex: 1; height: 50px; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;" title="タップで外す">
+                <!-- Slot 3 -->
+              </div>
+            </div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-align: center; font-weight: bold;">
+              ※下の獲得済みリストの【装備】ボタンを押してセットできます。装備スロットをタップすると外せます。
+            </div>
+          </div>
+          <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.2rem; line-height: 1.5;">
+            各色（青・桃・黄・緑・橙）の練習を<strong>「ノーミス（おてつき0回）」</strong>でクリアすると、伝説の隠し称号が解放されます！
+          </p>
+          
+          <!-- Perfect color progress indicators -->
+          <div class="perfect-colors-tracker">
+            <div class="tracker-title">ノーミスクリアした色：</div>
+            <div class="tracker-badges" style="display: flex; gap: 0.8rem; margin-top: 0.4rem;">
+              <span id="badge-color-blue" class="color-badge badge-locked btn-blue">青</span>
+              <span id="badge-color-pink" class="color-badge badge-locked btn-pink">桃</span>
+              <span id="badge-color-yellow" class="color-badge badge-locked btn-yellow">黄</span>
+              <span id="badge-color-green" class="color-badge badge-locked btn-green">緑</span>
+              <span id="badge-color-orange" class="color-badge badge-locked btn-orange">橙</span>
+            </div>
+          </div>
+
+          <!-- Special Theme Settings Tracker -->
+          <div id="gold-theme-toggle-area" style="margin-top: 1.2rem; background: #fffdf5; padding: 0.8rem; border-radius: 8px; border: 1px solid #ffd700; display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong style="color: #b8931d; font-size: 0.95rem;">✨ 黄金のテーマ背景 ✨</strong>
+                <div style="font-size: 0.75rem; color: #8a7a50; margin-top: 0.1rem;">アプリ全体を絢爛豪華な黄金背景に変更します</div>
+              </div>
+              <label class="switch-control" style="position: relative; display: inline-block; width: 44px; height: 22px;">
+                <input type="checkbox" id="gold-theme-checkbox" onchange="toggleGoldTheme(this.checked)" style="opacity: 0; width: 0; height: 0;">
+                <span class="switch-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 22px;"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="achievements-list" id="achievements-list-container" style="margin-top: 1.2rem;">
+            <!-- Achievements will be injected here -->
+          </div>
+        </div>
+
+        <!-- Tab 2 Content: Book of Poems (Encyclopedia) -->
+        <div id="ach-content-book" style="display: none; overflow-y: auto; flex: 1; padding-right: 0.2rem;">
+          <!-- Collection Progress Bar Card -->
+          <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 1.5px solid #22c55e; border-radius: 12px; padding: 1rem 1.2rem; margin-bottom: 1.2rem; display: flex; flex-direction: column; gap: 0.5rem; shrink: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+              <span style="font-size: 0.95rem; font-weight: bold; color: #15803d;">🎴 札コレクション獲得状況</span>
+              <span style="font-size: 1.6rem; font-weight: 900; color: #166534;"><span id="book-acquired-count" style="font-size: 2rem; font-family: monospace;">0</span> / 100 <span style="font-size: 0.9rem; font-weight: bold;">枚</span></span>
+            </div>
+            <div style="height: 12px; background: rgba(0,0,0,0.06); border-radius: 6px; overflow: hidden; border: 1px solid rgba(22,101,52,0.15); position: relative;">
+              <div id="book-progress-bar-inner" style="height: 100%; width: 0%; background: linear-gradient(90deg, #22c55e 0%, #10b981 100%); transition: width 0.6s ease; border-radius: 6px;"></div>
+            </div>
+            <div id="book-remaining-count-desc" style="font-size: 0.75rem; color: #166534; font-weight: bold; text-align: right;">
+              コンプリートまで あと 100 枚！
+            </div>
+          </div>
+
+          <!-- Color filtering tabs in book -->
+          <div class="ranking-tabs" style="display: flex; gap: 2px; margin-bottom: 0.8rem; background: rgba(0,0,0,0.05); padding: 2px; border-radius: 6px; shrink: 0;">
+            <button class="rank-tab-btn active" id="book-tab-all" onclick="filterBookColor('all')" style="flex: 1; padding: 0.4rem 0; font-size: 0.75rem; border: none; border-radius: 4px; background: var(--theme-color); color: #fff; cursor: pointer; font-weight: bold;">すべて (100)</button>
+            <button class="rank-tab-btn" id="book-tab-blue" onclick="filterBookColor('blue')" style="flex: 1; padding: 0.4rem 0; font-size: 0.75rem; border: none; border-radius: 4px; background: transparent; color: var(--text-color); cursor: pointer; font-weight: bold;">青 (20)</button>
+            <button class="rank-tab-btn" id="book-tab-pink" onclick="filterBookColor('pink')" style="flex: 1; padding: 0.4rem 0; font-size: 0.75rem; border: none; border-radius: 4px; background: transparent; color: var(--text-color); cursor: pointer; font-weight: bold;">桃 (20)</button>
+            <button class="rank-tab-btn" id="book-tab-yellow" onclick="filterBookColor('yellow')" style="flex: 1; padding: 0.4rem 0; font-size: 0.75rem; border: none; border-radius: 4px; background: transparent; color: var(--text-color); cursor: pointer; font-weight: bold;">黄 (20)</button>
+            <button class="rank-tab-btn" id="book-tab-green" onclick="filterBookColor('green')" style="flex: 1; padding: 0.4rem 0; font-size: 0.75rem; border: none; border-radius: 4px; background: transparent; color: var(--text-color); cursor: pointer; font-weight: bold;">緑 (20)</button>
+            <button class="rank-tab-btn" id="book-tab-orange" onclick="filterBookColor('orange')" style="flex: 1; padding: 0.4rem 0; font-size: 0.75rem; border: none; border-radius: 4px; background: transparent; color: var(--text-color); cursor: pointer; font-weight: bold;">橙 (20)</button>
+          </div>
+
+          <!-- Cards collection grid -->
+          <div id="book-cards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; padding-bottom: 1rem;">
+            <!-- Generated dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Poem Detail Modal (Explanation overlay) -->
+  <div id="poem-detail-modal" class="achievements-modal-overlay" style="display: none; z-index: 10010;" onclick="if(event.target === this) closePoemDetailModal();">
+    <div class="achievements-modal-box" style="max-width: 480px; width: 90%; background: #ffffff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border-top: 6px solid var(--theme-color); overflow: hidden; display: flex; flex-direction: column; position: relative;">
+      <!-- Close button on top right -->
+      <button class="close-modal-btn" onclick="closePoemDetailModal()" style="position: absolute; top: 10px; right: 15px; font-size: 1.8rem; border: none; background: transparent; cursor: pointer; color: #777;">&times;</button>
+      
+      <div style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+        <!-- Card badge and number -->
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span id="detail-card-badge" style="font-size: 0.8rem; font-weight: bold; background: rgba(0,0,0,0.05); padding: 3px 8px; border-radius: 4px;">No.-</span>
+          <span id="detail-card-status" style="font-size: 0.8rem; font-weight: bold; color: #10b981;"></span>
+        </div>
+        
+        <!-- Vertical/Large Poem Text block -->
+        <div style="background: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.2rem; min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; margin-top: 0.2rem;">
+          <div id="detail-card-kami" style="font-family: 'Hiragino Mincho Pro', YuMincho, serif; font-size: 1.3rem; font-weight: bold; text-align: center; color: #1a1a1a; letter-spacing: 0.1rem; line-height: 1.5;">上の句</div>
+          <div id="detail-card-simo" style="font-family: 'Hiragino Mincho Pro', YuMincho, serif; font-size: 1.15rem; text-align: center; color: #444; letter-spacing: 0.08rem; line-height: 1.5;">下の句</div>
+          <div id="detail-card-author" style="font-size: 0.85rem; color: #666; font-style: italic; margin-top: 0.4rem; text-align: right; width: 100%;">作者: -</div>
+        </div>
+        
+        <!-- Explanation block -->
+        <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+          <h4 style="margin: 0; font-size: 0.95rem; color: var(--theme-color); font-weight: bold; display: flex; align-items: center; gap: 0.2rem;">
+            <span>💡 歌の意味（解説）</span>
+          </h4>
+          <p id="detail-card-meaning" style="font-size: 0.9rem; line-height: 1.6; color: #334155; margin: 0; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 0.8rem;">
+            意味の解説データがここに表示されます。
+          </p>
+        </div>
+
+        <!-- Stamp position (absolute layout inside container) -->
+        <div id="detail-card-stamp-container" style="position: absolute; bottom: 65px; right: 20px; display: none; pointer-events: none;">
+          <div class="read-stamp" style="border: 3px double #ef4444; color: #ef4444; border-radius: 50%; width: 62px; height: 62px; display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: bold; transform: rotate(-12deg); font-family: 'Hiragino Mincho Pro', YuMincho, serif; background: rgba(254, 226, 226, 0.6); text-shadow: 0 0 1px rgba(239, 68, 68, 0.2); box-shadow: inset 0 0 4px rgba(239, 68, 68, 0.1); text-align: center; line-height: 1.2;">
+            読破済
+          </div>
+        </div>
+      </div>
+      
+      <div style="background: #f8fafc; padding: 0.8rem 1.5rem; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end;">
+        <button class="setting-btn" onclick="closePoemDetailModal()" style="padding: 0.45rem 1.2rem; background: var(--theme-color); color: #fff; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Growth Road Map Modal -->
+  <div id="growth-road-modal" class="achievements-modal-overlay" style="display: none; z-index: 10000;" onclick="if(event.target === this) closeGrowthRoadModal();">
+    <div class="achievements-modal-box" style="max-width: 900px; width: 92%; max-height: 85vh; display: flex; flex-direction: column; padding: 0; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);">
+      <div class="achievements-modal-header" style="background: linear-gradient(135deg, var(--theme-color) 0%, #1e3a8a 100%); color: #fff; padding: 1.2rem; border-bottom: none;">
+        <h3 style="font-weight: bold; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.3rem;">
+          <span>📈 成長の道（レベル一覧＆称号ロードマップ）</span>
+        </h3>
+        <button class="close-modal-btn" onclick="closeGrowthRoadModal()" style="color: rgba(255,255,255,0.8); background: transparent; font-size: 1.8rem; border: none; cursor: pointer;">&times;</button>
+      </div>
+      
+      <!-- Summary header panel -->
+      <div style="background: #f8fafc; padding: 1rem 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem;">
+        <div style="font-size: 0.95rem; font-weight: bold; color: #334155;">
+          現在のレベル: <span id="growth-summary-level" style="color: var(--theme-color); font-size: 1.2rem;">1</span> 
+          (<span id="growth-summary-title" style="color: var(--color-orange);">見習い歌詠み</span>)
+        </div>
+        <div style="font-size: 0.85rem; font-weight: bold; color: #64748b;">
+          累計経験値: <span id="growth-summary-xp" style="color: #334155;">0</span> XP | 
+          次の称号まで: あと <span id="growth-summary-levels-left" style="color: var(--color-orange); font-size: 1rem;">5</span> レベル
+        </div>
+      </div>
+
+      <div class="achievements-modal-body" style="flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; gap: 1.5rem; flex-direction: row; background: #fff;">
+        
+        <!-- Left Column: Title RoadMap Timeline -->
+        <div style="flex: 1 1 350px; max-width: 380px; display: flex; flex-direction: column; gap: 0.8rem; border-right: 1px solid #f1f5f9; padding-right: 1.5rem;">
+          <h4 style="margin: 0; font-size: 1rem; color: #334155; font-weight: bold; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.4rem; display: flex; align-items: center; gap: 0.3rem;">
+            <span>🏆 称号ロードマップ</span>
+          </h4>
+          <div id="growth-timeline-container" style="display: flex; flex-direction: column; gap: 0.6rem; overflow-y: auto; max-height: 48vh; padding-right: 0.3rem;">
+            <!-- Timeline elements generated dynamically -->
+          </div>
+        </div>
+
+        <!-- Right Column: 500 Level Map Grid -->
+        <div style="flex: 2 1 450px; display: flex; flex-direction: column; gap: 0.8rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.4rem;">
+            <h4 style="margin: 0; font-size: 1rem; color: #334155; font-weight: bold; display: flex; align-items: center; gap: 0.3rem;">
+              <span>🗺️ レベルマップ（1〜500）</span>
+            </h4>
+            <div style="display: flex; gap: 0.6rem; font-size: 0.75rem; font-weight: bold; color: #64748b;">
+              <span style="display: inline-flex; align-items: center; gap: 0.2rem;"><span style="display: inline-block; width: 10px; height: 10px; background: linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%); border-radius: 2px;"></span> 到達</span>
+              <span style="display: inline-flex; align-items: center; gap: 0.2rem;"><span style="display: inline-block; width: 10px; height: 10px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 2px;"></span> 現在</span>
+              <span style="display: inline-flex; align-items: center; gap: 0.2rem;"><span style="display: inline-block; width: 10px; height: 10px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 2px;"></span> 未到達</span>
+            </div>
+          </div>
+          
+          <!-- 500 grid container -->
+          <div id="growth-level-grid" style="display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; max-height: 44vh; overflow-y: auto; padding: 4px; border: 1px solid #f1f5f9; border-radius: 8px; background: #fafafa; scroll-behavior: smooth;">
+            <!-- 500 square badges generated dynamically -->
+          </div>
+          
+          <!-- Selected Level Details Overlay Box -->
+          <div id="growth-level-inspect-box" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.6rem 0.8rem; font-size: 0.8rem; color: #334155; min-height: 50px; display: flex; align-items: center; justify-content: center; font-weight: bold; text-align: center;">
+            レベルをクリックして、必要な獲得XPと取得する称号を確認してみよう！
+          </div>
+        </div>
+      </div>
+      
+      <div style="background: #f8fafc; padding: 1rem; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 0.8rem;">
+        <button class="setting-btn" onclick="closeGrowthRoadModal()" style="padding: 0.5rem 1.5rem; background: var(--theme-color); color: #fff; border: none; font-weight: bold; border-radius: 8px; cursor: pointer;">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Design skins selection modal (Encyclopedia) -->
+  <div id="skins-modal" class="achievements-modal-overlay" style="display: none; z-index: 10000;" onclick="if(event.target === this) closeSkinsModal();">
+    <div class="achievements-modal-box" style="max-width: 900px; width: 92%; max-height: 85vh; display: flex; flex-direction: column; padding: 0; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);">
+      <div class="achievements-modal-header" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: #fff; padding: 1.2rem; border-bottom: none;">
+        <h3 style="font-weight: bold; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.3rem;">
+          <span>🎴 デザイン図鑑（札の着せ替え）</span>
+        </h3>
+        <button class="close-modal-btn" onclick="closeSkinsModal()" style="color: rgba(255,255,255,0.8); background: transparent; font-size: 1.8rem; border: none; cursor: pointer;">&times;</button>
+      </div>
+      
+      <div class="achievements-modal-body" style="flex: 1; overflow-y: auto; padding: 1.5rem; background: #f8fafc; box-sizing: border-box;">
+        <div style="font-size: 0.95rem; color: #475569; font-weight: bold; margin-bottom: 1.2rem; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.8rem 1.2rem; box-shadow: var(--shadow-sm); line-height: 1.5; display: flex; justify-content: space-between; align-items: center;">
+          <span>獲得したデザインをゲームに適用できます。いろいろな条件を達成してデザインを集めよう！</span>
+          <span style="font-size: 0.85rem; color: #10b981; font-weight: 800;">獲得数: <span id="skins-unlocked-count">1</span> / 20</span>
+        </div>
+
+        <!-- Skins Grid -->
+        <div id="skins-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding-bottom: 1rem;">
+          <!-- Injected Dynamically by JS -->
+        </div>
+      </div>
+      
+      <div style="background: #f8fafc; padding: 1rem; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end;">
+        <button class="setting-btn" onclick="closeSkinsModal()" style="padding: 0.5rem 1.8rem; background: #10b981; color: #fff; border: none; font-weight: bold; border-radius: 8px; cursor: pointer;">閉じる</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
