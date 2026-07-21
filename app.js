@@ -4065,28 +4065,10 @@
       card.classList.add('hero-changed-animation');
     }
 
-    window.loadWeeklyHeroes = function() {
+    function recalculateAndRenderWeeklyHeroes(snapshots) {
       const xpListEl = document.getElementById('weekly-hero-xp-list');
       const missListEl = document.getElementById('weekly-hero-miss-list');
-      const panel = document.getElementById('weekly-hero-panel');
-      if (panel) panel.style.display = 'block';
-
-      const defaultXpHTML = `
-        <div style="display: flex; justify-content: space-between;"><span>🥇 -</span> <span style="color: #64748b;">0 pt</span></div>
-        <div style="display: flex; justify-content: space-between;"><span>🥈 -</span> <span style="color: #64748b;">0 pt</span></div>
-        <div style="display: flex; justify-content: space-between;"><span>🥉 -</span> <span style="color: #64748b;">0 pt</span></div>
-      `;
-      const defaultMissHTML = `
-        <div style="display: flex; justify-content: space-between;"><span>🥇 -</span> <span style="color: #64748b;">--%</span></div>
-        <div style="display: flex; justify-content: space-between;"><span>🥈 -</span> <span style="color: #64748b;">--%</span></div>
-        <div style="display: flex; justify-content: space-between;"><span>🥉 -</span> <span style="color: #64748b;">--%</span></div>
-      `;
-
-      if (!db || !window.get) {
-        if (xpListEl) xpListEl.innerHTML = defaultXpHTML;
-        if (missListEl) missListEl.innerHTML = defaultMissHTML;
-        return;
-      }
+      if (!xpListEl || !missListEl) return;
 
       const boundaries = getWeeklyBoundaries();
       const modes = ['blue', 'pink', 'yellow', 'green', 'orange', 'mix_40', 'mix_60', 'mix_80', 'chaos'];
@@ -4095,92 +4077,122 @@
         mix_40: 40, mix_60: 60, mix_80: 80, chaos: 100
       };
 
-      const prevXpKings = xpListEl ? (xpListEl.getAttribute('data-prev-kings') || '') : '';
-      const prevMissMasters = missListEl ? (missListEl.getAttribute('data-prev-kings') || '') : '';
+      const prevXpKings = xpListEl.getAttribute('data-prev-kings') || '';
+      const prevMissMasters = missListEl.getAttribute('data-prev-kings') || '';
 
-      const promises = modes.map(m => window.get(ref(db, `rankings_v3/${m}`)));
+      const userStats = {};
 
-      Promise.all(promises).then(snapshots => {
-        const userStats = {};
-
-        snapshots.forEach((snap, index) => {
-          const mode = modes[index];
+      modes.forEach(mode => {
+        const snap = snapshots[mode];
+        if (snap && snap.exists()) {
+          const records = snap.val();
           const cardCount = modeCardCounts[mode] || 20;
+          Object.keys(records).forEach(key => {
+            const rec = records[key];
+            const recTime = rec && (rec.date || (rec.timestamp ? new Date(rec.timestamp).getTime() : 0));
+            if (rec && recTime >= boundaries.start && recTime <= boundaries.end) {
+              const name = rec.name ? String(rec.name).replace(/\s*\(\d+(\.\d+)?秒?\)$/, '').trim() : '';
+              if (!name || name === '-') return;
 
-          if (snap.exists()) {
-            const records = snap.val();
-            Object.keys(records).forEach(key => {
-              const rec = records[key];
-              if (rec && rec.date >= boundaries.start && rec.date <= boundaries.end) {
-                const name = rec.name ? String(rec.name).replace(/\s*\(\d+(\.\d+)?秒?\)$/, '').trim() : '';
-                if (!name || name === '-') return;
-
-                if (!userStats[name]) {
-                  userStats[name] = { points: 0, misses: 0, cards: 0 };
-                }
-
-                userStats[name].points += cardCount * 10;
-                userStats[name].misses += parseInt(rec.misses || 0);
-                userStats[name].cards += cardCount;
+              if (!userStats[name]) {
+                userStats[name] = { points: 0, misses: 0, cards: 0 };
               }
-            });
-          }
-        });
 
-        const xpKings = [];
-        const missMasters = [];
-
-        Object.keys(userStats).forEach(name => {
-          const stats = userStats[name];
-          xpKings.push({ name, points: stats.points });
-
-          if (stats.cards >= 20) {
-            const ratio = stats.misses / stats.cards;
-            missMasters.push({ name, ratio, cards: stats.cards });
-          }
-        });
-
-        xpKings.sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
-        missMasters.sort((a, b) => a.ratio - b.ratio || b.cards - a.cards || a.name.localeCompare(b.name));
-
-        const medals = ['🥇', '🥈', '🥉'];
-        let newXpKey = '';
-        let newMissKey = '';
-
-        if (xpListEl) {
-          let html = '';
-          for (let i = 0; i < 3; i++) {
-            const k = xpKings[i] || { name: '-', points: 0 };
-            newXpKey += `${k.name}:${k.points}|`;
-            const scoreStr = k.points > 0 ? `${k.points.toLocaleString()} pt` : '0 pt';
-            html += `<div style="display: flex; justify-content: space-between;"><span>${medals[i]} ${escapeHTML(k.name)}</span> <span style="color: #64748b; font-size: 0.72rem; font-weight: bold;">${scoreStr}</span></div>`;
-          }
-          xpListEl.innerHTML = html;
-          if (prevXpKings && prevXpKings !== newXpKey) {
-            triggerHeroCardAnimation('weekly-hero-xp-card');
-          }
-          xpListEl.setAttribute('data-prev-kings', newXpKey);
+              userStats[name].points += cardCount * 10;
+              userStats[name].misses += parseInt(rec.misses || 0);
+              userStats[name].cards += cardCount;
+            }
+          });
         }
+      });
 
-        if (missListEl) {
-          let html = '';
-          for (let i = 0; i < 3; i++) {
-            const m = missMasters[i] || { name: '-', ratio: 999, cards: 0 };
-            newMissKey += `${m.name}:${m.ratio.toFixed(4)}|`;
-            const pct = m.ratio < 999 ? `${(m.ratio * 100).toFixed(1)}%` : '--%';
-            const countStr = m.cards > 0 ? ` (札:${m.cards})` : '';
-            html += `<div style="display: flex; justify-content: space-between;"><span>${medals[i]} ${escapeHTML(m.name)}</span> <span style="color: #64748b; font-size: 0.72rem; font-weight: bold;">${pct}${countStr}</span></div>`;
-          }
-          missListEl.innerHTML = html;
-          if (prevMissMasters && prevMissMasters !== newMissKey) {
-            triggerHeroCardAnimation('weekly-hero-miss-card');
-          }
-          missListEl.setAttribute('data-prev-kings', newMissKey);
+      const xpKings = [];
+      const missMasters = [];
+
+      Object.keys(userStats).forEach(name => {
+        const stats = userStats[name];
+        xpKings.push({ name, points: stats.points });
+
+        if (stats.cards >= 20) {
+          const ratio = stats.misses / stats.cards;
+          missMasters.push({ name, ratio, cards: stats.cards });
         }
+      });
 
-      }).catch(err => {
-        console.error("Error loading weekly heroes in real-time:", err);
+      xpKings.sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
+      missMasters.sort((a, b) => a.ratio - b.ratio || b.cards - a.cards || a.name.localeCompare(b.name));
+
+      const medals = ['🥇', '🥈', '🥉'];
+      let newXpKey = '';
+      let newMissKey = '';
+
+      let xpHtml = '';
+      for (let i = 0; i < 3; i++) {
+        const k = xpKings[i] || { name: '-', points: 0 };
+        newXpKey += `${k.name}:${k.points}|`;
+        const scoreStr = k.points > 0 ? `${k.points.toLocaleString()} XP` : '0 XP';
+        xpHtml += `<div style="display: flex; justify-content: space-between;"><span>${medals[i]} ${escapeHTML(k.name)}</span> <span style="color: #64748b; font-size: 0.72rem; font-weight: bold;">${scoreStr}</span></div>`;
+      }
+      xpListEl.innerHTML = xpHtml;
+      if (prevXpKings && prevXpKings !== newXpKey) {
+        triggerHeroCardAnimation('weekly-hero-xp-card');
+      }
+      xpListEl.setAttribute('data-prev-kings', newXpKey);
+
+      let missHtml = '';
+      for (let i = 0; i < 3; i++) {
+        const m = missMasters[i] || { name: '-', ratio: 999, cards: 0 };
+        newMissKey += `${m.name}:${m.ratio.toFixed(4)}|`;
+        const pct = m.ratio < 999 ? `${(m.ratio * 100).toFixed(1)}%` : '--%';
+        const countStr = m.cards > 0 ? ` (札:${m.cards})` : '';
+        missHtml += `<div style="display: flex; justify-content: space-between;"><span>${medals[i]} ${escapeHTML(m.name)}</span> <span style="color: #64748b; font-size: 0.72rem; font-weight: bold;">${pct}${countStr}</span></div>`;
+      }
+      missListEl.innerHTML = missHtml;
+      if (prevMissMasters && prevMissMasters !== newMissKey) {
+        triggerHeroCardAnimation('weekly-hero-miss-card');
+      }
+      missListEl.setAttribute('data-prev-kings', newMissKey);
+    }
+
+    window.loadWeeklyHeroes = function() {
+      const xpListEl = document.getElementById('weekly-hero-xp-list');
+      const missListEl = document.getElementById('weekly-hero-miss-list');
+      const panel = document.getElementById('weekly-hero-panel');
+      if (panel) panel.style.display = 'block';
+
+      const defaultXpHTML = `
+        <div style="display: flex; justify-content: space-between;"><span>🥇 -</span> <span style="color: #64748b;">0 XP</span></div>
+        <div style="display: flex; justify-content: space-between;"><span>🥈 -</span> <span style="color: #64748b;">0 XP</span></div>
+        <div style="display: flex; justify-content: space-between;"><span>🥉 -</span> <span style="color: #64748b;">0 XP</span></div>
+      `;
+      const defaultMissHTML = `
+        <div style="display: flex; justify-content: space-between;"><span>🥇 -</span> <span style="color: #64748b;">--%</span></div>
+        <div style="display: flex; justify-content: space-between;"><span>🥈 -</span> <span style="color: #64748b;">--%</span></div>
+        <div style="display: flex; justify-content: space-between;"><span>🥉 -</span> <span style="color: #64748b;">--%</span></div>
+      `;
+
+      if (!db || !window.onValue) {
         if (xpListEl) xpListEl.innerHTML = defaultXpHTML;
         if (missListEl) missListEl.innerHTML = defaultMissHTML;
+        return;
+      }
+
+      if (window.weeklyUnsubscribes) {
+        window.weeklyUnsubscribes.forEach(unsub => unsub());
+      }
+      window.weeklyUnsubscribes = [];
+
+      const modes = ['blue', 'pink', 'yellow', 'green', 'orange', 'mix_40', 'mix_60', 'mix_80', 'chaos'];
+      const snapshots = {};
+
+      modes.forEach(mode => {
+        const modeRef = ref(db, `rankings_v3/${mode}`);
+        const unsub = window.onValue(modeRef, (snap) => {
+          snapshots[mode] = snap;
+          recalculateAndRenderWeeklyHeroes(snapshots);
+        }, (err) => {
+          console.error(`Error listening to ${mode}:`, err);
+        });
+        window.weeklyUnsubscribes.push(unsub);
       });
     };

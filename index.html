@@ -918,6 +918,7 @@
         window.orderByChild = orderByChild;
         window.limitToFirst = limitToFirst;
         window.get = get;
+        window.onValue = onValue;
         window.listenToRankings();
         if (typeof window.fetchEventsAndCheck === 'function') {
           window.fetchEventsAndCheck();
@@ -1498,125 +1499,9 @@
       }
     };
 
-    // -------------------------------------------------------------
-    // Weekly Hero, Events, and Event-Driven Stats Synchronizer
-    // -------------------------------------------------------------
-    window.checkAndUpdateWeeklyHeroes = function(xpGained, missesGained, takenCountGained) {
-      if (!db || window.isGuestMode) return;
-      const cachedKey = baseGoshikiStorage.getItem('goshiki_current_user_key');
-      let nickname = baseGoshikiStorage.getItem('goshiki_current_username') || '';
-      nickname = nickname.replace(/\s*\(\d+(\.\d+)?秒?\)$/, '').trim();
-      if (!cachedKey || !nickname) return;
 
-      const currentMonday = getMondayDateString();
 
-      // Get current local values
-      let weeklyXp = parseInt(baseGoshikiStorage.getItem('goshiki_weekly_xp_gain') || '0');
-      let weeklyMisses = parseInt(baseGoshikiStorage.getItem('goshiki_weekly_misses') || '0');
-      let weeklyTaken = parseInt(baseGoshikiStorage.getItem('goshiki_weekly_taken_count') || '0');
-      let lastWeek = baseGoshikiStorage.getItem('goshiki_weekly_updated_week') || '';
-
-      if (lastWeek !== currentMonday) {
-        weeklyXp = 0;
-        weeklyMisses = 0;
-        weeklyTaken = 0;
-        lastWeek = currentMonday;
-      }
-
-      weeklyXp += xpGained;
-      weeklyMisses += missesGained;
-      weeklyTaken += takenCountGained;
-
-      baseGoshikiStorage.setItem('goshiki_weekly_xp_gain', weeklyXp);
-      baseGoshikiStorage.setItem('goshiki_weekly_misses', weeklyMisses);
-      baseGoshikiStorage.setItem('goshiki_weekly_taken_count', weeklyTaken);
-      baseGoshikiStorage.setItem('goshiki_weekly_updated_week', lastWeek);
-
-      // Sync user values to Firebase
-      set(ref(db, `users/${cachedKey}/goshiki_weekly_xp_gain`), weeklyXp);
-      set(ref(db, `users/${cachedKey}/goshiki_weekly_misses`), weeklyMisses);
-      set(ref(db, `users/${cachedKey}/goshiki_weekly_taken_count`), weeklyTaken);
-      set(ref(db, `users/${cachedKey}/goshiki_weekly_updated_week`), lastWeek);
-
-      // Transaction to update global leaders
-      const heroRef = ref(db, 'weekly_heroes_v3');
-      runTransaction(heroRef, (currentData) => {
-        if (!currentData || currentData.week_start_date !== currentMonday) {
-          const firstKings = [{ nickname: nickname, value: weeklyXp }, { nickname: '-', value: 0 }, { nickname: '-', value: 0 }];
-          const firstMasters = weeklyTaken >= 20 
-            ? [{ nickname: nickname, value: (weeklyMisses / weeklyTaken), count: weeklyTaken }, { nickname: '-', value: 999, count: 0 }, { nickname: '-', value: 999, count: 0 }] 
-            : [{ nickname: '-', value: 999, count: 0 }, { nickname: '-', value: 999, count: 0 }, { nickname: '-', value: 999, count: 0 }];
-          return {
-            week_start_date: currentMonday,
-            level_kings: firstKings,
-            miss_ratio_masters: firstMasters
-          };
-        }
-
-        let updated = false;
-
-        // Level King 1-3 check
-        let kings = currentData.level_kings || [];
-        while (kings.length < 3) kings.push({ nickname: '-', value: 0 });
-        
-        const userKingIndex = kings.findIndex(k => k.nickname === nickname);
-        if (userKingIndex !== -1) {
-          if (weeklyXp > kings[userKingIndex].value) {
-            kings[userKingIndex].value = weeklyXp;
-            updated = true;
-          }
-        } else {
-          kings.push({ nickname: nickname, value: weeklyXp });
-          updated = true;
-        }
-        
-        if (updated) {
-          kings.sort((a, b) => b.value - a.value);
-          kings = kings.slice(0, 3);
-          while (kings.length < 3) kings.push({ nickname: '-', value: 0 });
-          currentData.level_kings = kings;
-        }
-
-        // Miss Ratio Master 1-3 check
-        if (weeklyTaken >= 20) {
-          let masters = currentData.miss_ratio_masters || [];
-          while (masters.length < 3) masters.push({ nickname: '-', value: 999, count: 0 });
-          
-          const userRatio = weeklyMisses / weeklyTaken;
-          const userMasterIndex = masters.findIndex(m => m.nickname === nickname);
-          
-          let masterUpdated = false;
-          if (userMasterIndex !== -1) {
-            if (userRatio !== masters[userMasterIndex].value || weeklyTaken !== masters[userMasterIndex].count) {
-              masters[userMasterIndex].value = userRatio;
-              masters[userMasterIndex].count = weeklyTaken;
-              masterUpdated = true;
-            }
-          } else {
-            masters.push({ nickname: nickname, value: userRatio, count: weeklyTaken });
-            masterUpdated = true;
-          }
-          
-          if (masterUpdated) {
-            masters.sort((a, b) => a.value - b.value);
-            masters = masters.slice(0, 3);
-            while (masters.length < 3) masters.push({ nickname: '-', value: 999, count: 0 });
-            currentData.miss_ratio_masters = masters;
-            updated = true;
-          }
-        }
-
-        return updated ? currentData : undefined;
-      }).then(() => {
-        if (typeof window.loadWeeklyHeroes === 'function') {
-          window.loadWeeklyHeroes();
-        }
-      }).catch(err => {
-        console.error("Weekly hero transaction error:", err);
-      });
-    };
-
-    window.loadWeeklyHeroes = function() {
+    window.oldLoadWeeklyHeroes = function() {
       const xpListEl = document.getElementById('weekly-hero-xp-list');
       const missListEl = document.getElementById('weekly-hero-miss-list');
       const panel = document.getElementById('weekly-hero-panel');
