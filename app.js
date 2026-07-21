@@ -4171,7 +4171,7 @@
         <div style="display: flex; justify-content: space-between;"><span>🥉 -</span> <span style="color: #64748b;">--%</span></div>
       `;
 
-      if (!db || !window.onValue) {
+      if (!window.db || !window.onValue || !window.ref) {
         if (xpListEl) xpListEl.innerHTML = defaultXpHTML;
         if (missListEl) missListEl.innerHTML = defaultMissHTML;
         return;
@@ -4186,7 +4186,7 @@
       const snapshots = {};
 
       modes.forEach(mode => {
-        const modeRef = ref(db, `rankings_v3/${mode}`);
+        const modeRef = window.ref(window.db, `rankings_v3/${mode}`);
         const unsub = window.onValue(modeRef, (snap) => {
           snapshots[mode] = snap;
           recalculateAndRenderWeeklyHeroes(snapshots);
