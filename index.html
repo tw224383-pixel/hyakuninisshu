@@ -391,7 +391,7 @@
           </div>
           <!-- 今週のヒーロー (Weekly Hero Panel) -->
           <div class="weekly-hero-container" id="weekly-hero-panel" style="display: block;">
-            <div class="weekly-hero-title">🏆 今週のヒーロー（毎週月曜更新）</div>
+            <div class="weekly-hero-title">🏆 今週のヒーロー（リアルタイム更新中）</div>
             <div class="weekly-hero-grid">
               <!-- Level Kings Table -->
               <div class="weekly-hero-card" id="weekly-hero-xp-card">
@@ -920,6 +920,9 @@
         window.get = get;
         window.onValue = onValue;
         window.listenToRankings();
+        if (typeof checkCachedLogin === 'function') {
+          checkCachedLogin();
+        }
         if (typeof window.fetchEventsAndCheck === 'function') {
           window.fetchEventsAndCheck();
         }
@@ -1474,7 +1477,7 @@
     }
 
     // Initialize with config
-    window.initFirebase = function(config) {
+    window.oldInitFirebase = function(config) {
       if (!config || config.apiKey === "YOUR_API_KEY" || config.apiKey === "" || !config.databaseURL) {
         console.warn("Firebase config placeholders are not replaced yet.");
         const container = document.getElementById('ranking-list');
