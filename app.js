@@ -2102,16 +2102,28 @@
         window.syncItemToFirebase('goshiki_weekly_usachan_count', weeklyUsachan);
       }
 
-      // Push record to Firebase for weekly hunter ranking
+      // Push record to Firebase for weekly hunter ranking (ゲストは除外)
       let currentUsername = goshikiStorage.getItem('goshiki_current_username') || goshikiStorage.getItem('goshiki_ranking_username') || 'ゲスト';
       currentUsername = currentUsername.replace(/\s*\(\d+(\.\d+)?秒?\)$/, '').trim();
-      
-      if (window.db && window.ref && window.push) {
-        const usachanRef = window.ref(window.db, 'usachan_records_v3');
-        window.push(usachanRef, {
-          name: currentUsername,
-          timestamp: Date.now()
-        });
+      if (window.isGuestMode || !currentUsername || currentUsername === 'ゲスト') {
+        // ゲストはうさぎハンターランキングに登録しない
+      } else {
+        const doUsachanPush = (retries) => {
+          if (window.db && window.ref && window.push) {
+            const usachanRef = window.ref(window.db, 'usachan_records_v3');
+            window.push(usachanRef, {
+              name: currentUsername,
+              timestamp: Date.now()
+            }).then(() => {
+              if (typeof window.loadWeeklyHeroes === 'function') {
+                window.loadWeeklyHeroes();
+              }
+            }).catch(() => {});
+          } else if (retries > 0) {
+            setTimeout(() => doUsachanPush(retries - 1), 500);
+          }
+        };
+        doUsachanPush(10);
       }
 
       // Check for usachan achievement (Cumulative 30 rabbits)
@@ -4498,7 +4510,7 @@
             const recTime = rec && (rec.date || (rec.timestamp ? new Date(rec.timestamp).getTime() : 0));
             if (rec && recTime >= boundaries.start && recTime <= boundaries.end) {
               const name = rec.name ? String(rec.name).replace(/\s*\(\d+(\.\d+)?秒?\)$/, '').trim() : '';
-              if (!name || name === '-') return;
+              if (!name || name === '-' || name === 'ゲスト') return;
 
               if (!userStats[name]) {
                 userStats[name] = { points: 0, misses: 0, cards: 0 };
@@ -4521,7 +4533,7 @@
           const rec = records[key];
           if (rec && rec.timestamp >= boundaries.start && rec.timestamp <= boundaries.end) {
             const name = rec.name ? String(rec.name).replace(/\s*\(\d+(\.\d+)?秒?\)$/, '').trim() : '';
-            if (name && name !== '-') {
+            if (name && name !== '-' && name !== 'ゲスト') {
               usachanCounts[name] = (usachanCounts[name] || 0) + 1;
             }
           }

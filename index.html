@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>黒田先生の百人一首 - 五色百人一首 練習アプリ</title>
-    <link rel="stylesheet" href="style.css?v=639204235615003335">
+    <link rel="stylesheet" href="style.css?v=639204444262009406">
 </head>
 <body>
 
@@ -935,8 +935,8 @@
     </div>
   </div>
 
-    <script src="poems_data.js?v=639204235615003335"></script>
-  <script src="app.js?v=639204235615003335"></script>
+    <script src="poems_data.js?v=639204444262009406"></script>
+  <script src="app.js?v=639204444262009406"></script>
 
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
@@ -1039,6 +1039,56 @@
           });
         }
       } catch(e) {}
+
+      window.checkEventAchievements = function(misses) {
+        const now = new Date();
+
+        // ---- ローカル日付チェック（Firebase不要・ゲストモード対応） ----
+        const LOCAL_EVENTS = [
+          {
+            key: 'summer_hero',
+            start: new Date('2026-07-18T00:00:00'),
+            end:   new Date('2026-08-24T23:59:59'),
+            maxMisses: 3
+          },
+          {
+            key: 'obon_event',
+            start: new Date('2026-08-13T00:00:00'),
+            end:   new Date('2026-08-16T23:59:59'),
+            maxMisses: 2
+          }
+        ];
+
+        LOCAL_EVENTS.forEach(ev => {
+          if (now >= ev.start && now <= ev.end && misses <= ev.maxMisses) {
+            if (typeof checkBadgeUnlock === 'function') {
+              checkBadgeUnlock(ev.key);
+            }
+          }
+        });
+
+        // ---- Firebase activeEvents によるチェック（追加のカスタムイベント対応） ----
+        if (window.activeEvents && window.activeEvents.length > 0) {
+          window.activeEvents.forEach(ev => {
+            // LOCAL_EVENTSで既に処理したキーは重複しないようスキップ
+            const alreadyHandled = LOCAL_EVENTS.some(le => le.key === ev.reward_title_key);
+            if (alreadyHandled) return;
+
+            let conditionMet = false;
+            if (ev.reward_title_key === 'summer_hero' && misses <= 3) {
+              conditionMet = true;
+            } else if (ev.reward_title_key === 'obon_event' && misses <= 2) {
+              conditionMet = true;
+            }
+
+            if (conditionMet) {
+              if (typeof checkBadgeUnlock === 'function') {
+                checkBadgeUnlock(ev.reward_title_key);
+              }
+            }
+          });
+        }
+      };
 
       return push(rankingRef, {
         name: name,
@@ -1800,25 +1850,6 @@
         }
       }).catch(err => {
         console.error("Error fetching events:", err);
-      });
-    };
-
-    window.checkEventAchievements = function(misses) {
-      if (!window.activeEvents || window.activeEvents.length === 0) return;
-      
-      window.activeEvents.forEach(ev => {
-        let conditionMet = false;
-        if (ev.reward_title_key === 'summer_hero' && misses <= 3) {
-          conditionMet = true;
-        } else if (ev.reward_title_key === 'obon_event' && misses <= 2) {
-          conditionMet = true;
-        }
-        
-        if (conditionMet) {
-          if (typeof checkBadgeUnlock === 'function') {
-            checkBadgeUnlock(ev.reward_title_key);
-          }
-        }
       });
     };
 
