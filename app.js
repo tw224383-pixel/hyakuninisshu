@@ -877,7 +877,11 @@
 
     function updateTotalAcquiredCount() {
       const count = goshikiStorage.getItem('goshiki_total_acquired') || 0;
-      document.getElementById('total-acquired-cards').textContent = count;
+      const el = document.getElementById('total-acquired-cards');
+      if (el) el.textContent = count;
+      if (typeof updatePlayerStatsDashboard === 'function') {
+        updatePlayerStatsDashboard();
+      }
     }
 
     function incrementTotalAcquiredCount(amount) {
@@ -1594,6 +1598,173 @@
       }
     }
 
+    function checkStreakTitles(streak) {
+      if (streak >= 7) {
+        checkBadgeUnlock('streak_7');
+      }
+      if (streak >= 14) {
+        checkBadgeUnlock('streak_14');
+      }
+      if (streak >= 21) {
+        checkBadgeUnlock('streak_21');
+      }
+      if (streak >= 30) {
+        checkBadgeUnlock('streak_30');
+      }
+    }
+
+    function checkWeeklyReset() {
+      const lastLoginStr = goshikiStorage.getItem('goshiki_last_login_date');
+      if (!lastLoginStr) return;
+
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const date = String(now.getDate()).padStart(2, '0');
+      const todayStr = `${year}-${month}-${date}`;
+
+      if (lastLoginStr === todayStr) return;
+
+      const getMondayOf = (dateStr) => {
+        const d = new Date(dateStr + 'T00:00:00');
+        const day = d.getDay();
+        const diff = (day === 0 ? -6 : 1 - day);
+        d.setDate(d.getDate() + diff);
+        d.setHours(0, 0, 0, 0);
+        return d.getTime();
+      };
+
+      if (getMondayOf(lastLoginStr) !== getMondayOf(todayStr)) {
+        goshikiStorage.setItem('goshiki_weekly_usachan_count', '0');
+      }
+    }
+
+    function checkAndUpdateLoginStreak() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const date = String(now.getDate()).padStart(2, '0');
+      const todayStr = `${year}-${month}-${date}`;
+
+      checkWeeklyReset();
+
+      const lastLoginStr = goshikiStorage.getItem('goshiki_last_login_date');
+      let streak = parseInt(goshikiStorage.getItem('goshiki_login_streak') || '0');
+      let totalLogins = parseInt(goshikiStorage.getItem('goshiki_total_logins') || '0');
+
+      if (!lastLoginStr) {
+        streak = 1;
+        totalLogins = 1;
+        goshikiStorage.setItem('goshiki_login_streak', String(streak));
+        goshikiStorage.setItem('goshiki_total_logins', String(totalLogins));
+        goshikiStorage.setItem('goshiki_last_login_date', todayStr);
+      } else {
+        if (lastLoginStr === todayStr) {
+          if (totalLogins === 0) {
+            totalLogins = 1;
+            goshikiStorage.setItem('goshiki_total_logins', String(totalLogins));
+          }
+        } else {
+          totalLogins += 1;
+          goshikiStorage.setItem('goshiki_total_logins', String(totalLogins));
+
+          const lastDate = new Date(lastLoginStr + 'T00:00:00');
+          const todayDate = new Date(todayStr + 'T00:00:00');
+          const diffTime = todayDate.getTime() - lastDate.getTime();
+          const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+          if (diffDays === 1) {
+            streak += 1;
+            goshikiStorage.setItem('goshiki_login_streak', String(streak));
+            goshikiStorage.setItem('goshiki_last_login_date', todayStr);
+          } else if (diffDays > 1) {
+            streak = 1;
+            goshikiStorage.setItem('goshiki_login_streak', String(streak));
+            goshikiStorage.setItem('goshiki_last_login_date', todayStr);
+          }
+        }
+      }
+
+      checkStreakTitles(streak);
+
+      if (typeof updatePlayerStatsDashboard === 'function') {
+        updatePlayerStatsDashboard();
+      }
+    }
+    window.checkAndUpdateLoginStreak = checkAndUpdateLoginStreak;
+
+    function getUnlockedTitlesCount() {
+      const allTitles = typeof getAllTitles === 'function' ? getAllTitles() : [];
+      let perfectColors = [];
+      let specialAchievements = [];
+      let unlockedBadges = [];
+      try {
+        perfectColors = JSON.parse(goshikiStorage.getItem('goshiki_perfect_colors') || '[]');
+      } catch (e) {}
+      try {
+        const oldSpecial = JSON.parse(goshikiStorage.getItem('goshiki_special_achievements') || '[]');
+        const newSpecial = JSON.parse(goshikiStorage.getItem('goshiki_special_achievements_v2') || '[]');
+        specialAchievements = [...new Set([...oldSpecial, ...newSpecial])];
+      } catch (e) {}
+      try {
+        unlockedBadges = JSON.parse(goshikiStorage.getItem('goshiki_unlocked_badges_v2') || '[]');
+      } catch(e) {}
+
+      let unlockedCount = 0;
+      allTitles.forEach(title => {
+        let isUnlocked = false;
+        if (title.key.startsWith('secret_')) {
+          const id = parseInt(title.key.replace('secret_', ''));
+          isUnlocked = perfectColors.length >= id;
+        } else if (title.key === 'strongest_4th_grader' || title.key === 'godspeed' || title.key === 'ultimate_song_saint') {
+          isUnlocked = specialAchievements.includes(title.key);
+        } else if (title.key === 'hall_of_fame') {
+          isUnlocked = parseInt(goshikiStorage.getItem('goshiki_title_count_hall_of_fame') || '0') > 0;
+        } else if (title.key === 'top_challenger') {
+          isUnlocked = parseInt(goshikiStorage.getItem('goshiki_title_count_top_challenger') || '0') > 0;
+        } else if (title.key === 'yesterday') {
+          isUnlocked = parseInt(goshikiStorage.getItem('goshiki_title_count_yesterday') || '0') > 0;
+        } else {
+          isUnlocked = unlockedBadges.includes(title.key);
+        }
+        if (isUnlocked) unlockedCount++;
+      });
+
+      return {
+        unlocked: unlockedCount,
+        total: allTitles.length
+      };
+    }
+    window.getUnlockedTitlesCount = getUnlockedTitlesCount;
+
+    function updatePlayerStatsDashboard() {
+      // 1. Total logins
+      const totalLogins = goshikiStorage.getItem('goshiki_total_logins') || '1';
+      const totalLoginsEl = document.getElementById('stats-total-logins');
+      if (totalLoginsEl) totalLoginsEl.textContent = `${totalLogins} 日`;
+
+      // 2. Login streak
+      const streak = goshikiStorage.getItem('goshiki_login_streak') || '1';
+      const streakEl = document.getElementById('stats-streak-logins');
+      if (streakEl) streakEl.textContent = `${streak} 日`;
+
+      // 3. Total cards correct
+      const totalCards = goshikiStorage.getItem('goshiki_total_acquired') || '0';
+      const totalCardsEl = document.getElementById('stats-total-cards');
+      if (totalCardsEl) totalCardsEl.textContent = `${totalCards} 枚`;
+
+      // 4. Title count
+      const titleStats = getUnlockedTitlesCount();
+      const titlesEl = document.getElementById('stats-titles-count');
+      if (titlesEl) titlesEl.textContent = `${titleStats.unlocked} / ${titleStats.total}`;
+
+      // 5. Total usachan count
+      const totalUsachan = goshikiStorage.getItem('goshiki_total_usachan_count') || '0';
+      const totalUsachanEl = document.getElementById('stats-total-usachan');
+      if (totalUsachanEl) totalUsachanEl.textContent = `${totalUsachan} 匹`;
+    }
+    window.updatePlayerStatsDashboard = updatePlayerStatsDashboard;
+
     const NEW_ACHIEVEMENTS = [
       { key: "goshiki_complete", name: "五色コンプリート", icon: "🎨", req: "全5色それぞれで1回ずつクリアする", desc: "すべてのお札の色を体験した、バラエティ豊かな歌い手！", color: "#3b82f6" },
       { key: "early_bird", name: "早起きは三文の徳", icon: "🌅", req: "朝8時台に練習をクリアする", desc: "朝の新鮮な空気の中で頭をすっきりさせ、かるたを修めた証！", color: "#f97316" },
@@ -1628,13 +1799,18 @@
         if (typeof checkSkinUnlocks === 'function') {
           checkSkinUnlocks();
         }
+        if (typeof updatePlayerStatsDashboard === 'function') {
+          updatePlayerStatsDashboard();
+        }
         
-        const badgeInfo = NEW_ACHIEVEMENTS.find(b => b.key === key);
+        const allTitles = typeof getAllTitles === 'function' ? getAllTitles() : [];
+        const badgeInfo = allTitles.find(t => t.key === key);
         if (badgeInfo) {
+          const color = badgeInfo.color || '#8b5cf6';
           const root = document.documentElement;
-          root.style.setProperty('--badge-theme-color', badgeInfo.color);
-          root.style.setProperty('--badge-theme-color-rgba', `${badgeInfo.color}15`);
-          root.style.setProperty('--badge-theme-color-rgb', hexToRgbStr(badgeInfo.color));
+          root.style.setProperty('--badge-theme-color', color);
+          root.style.setProperty('--badge-theme-color-rgba', `${color}15`);
+          root.style.setProperty('--badge-theme-color-rgb', hexToRgbStr(color));
           
           document.getElementById('popup-badge-icon').textContent = badgeInfo.icon;
           document.getElementById('popup-badge-name').textContent = badgeInfo.name;
@@ -1876,12 +2052,47 @@
       addXP(200);
       if (typeof addPoints === 'function') addPoints(200, 'mascot_bonus', '');
       
+      // Increment Usachan counts
+      let totalUsachan = parseInt(goshikiStorage.getItem('goshiki_total_usachan_count') || '0') + 1;
+      let weeklyUsachan = parseInt(goshikiStorage.getItem('goshiki_weekly_usachan_count') || '0') + 1;
+      
+      goshikiStorage.setItem('goshiki_total_usachan_count', String(totalUsachan));
+      goshikiStorage.setItem('goshiki_weekly_usachan_count', String(weeklyUsachan));
+
+      // Sync usachan counts to Firebase immediately if not in guest mode
+      if (!window.isGuestMode && typeof window.syncItemToFirebase === 'function') {
+        window.syncItemToFirebase('goshiki_total_usachan_count', totalUsachan);
+        window.syncItemToFirebase('goshiki_weekly_usachan_count', weeklyUsachan);
+      }
+
+      // Push record to Firebase for weekly hunter ranking
+      let currentUsername = goshikiStorage.getItem('goshiki_current_username') || goshikiStorage.getItem('goshiki_ranking_username') || 'ゲスト';
+      currentUsername = currentUsername.replace(/\s*\(\d+(\.\d+)?秒?\)$/, '').trim();
+      
+      if (window.db && window.ref && window.push) {
+        const usachanRef = window.ref(window.db, 'usachan_records_v3');
+        window.push(usachanRef, {
+          name: currentUsername,
+          timestamp: Date.now()
+        });
+      }
+
+      // Check for usachan achievement (Cumulative 30 rabbits)
+      if (totalUsachan >= 30) {
+        checkBadgeUnlock('usachan_friend');
+      }
+
+      // Update player stats dashboard
+      if (typeof updatePlayerStatsDashboard === 'function') {
+        updatePlayerStatsDashboard();
+      }
+
       const rect = mascot.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
       createSparkleBurst(centerX, centerY);
 
-      alert("✨ ラッキー！隠れキャラ（うさちゃん）を見つけたよ！\nボーナスXP +200 獲得！ ✨");
+      alert(`✨ ラッキー！隠れキャラ（うさちゃん）を見つけたよ！\nボーナスXP +200 獲得！\n(今週: ${weeklyUsachan}匹 / 累計: ${totalUsachan}匹) ✨`);
     }
     window.triggerMascotBonus = triggerMascotBonus;
 
@@ -2649,6 +2860,9 @@
       if (typeof loadLevelData === 'function') loadLevelData();
       if (typeof loadRecords === 'function') loadRecords();
       if (typeof updateTotalAcquiredCount === 'function') updateTotalAcquiredCount();
+      if (typeof window.checkAndUpdateLoginStreak === 'function') {
+        window.checkAndUpdateLoginStreak();
+      }
 
       checkVersionUpdate();
     }
@@ -2672,8 +2886,20 @@
     // -------------------------------------------------------------
     // Scroll Updates & Announcements (Makimono Board)
     // -------------------------------------------------------------
-    const APP_VERSION = 'v6.0';
+    const APP_VERSION = 'v7.0';
     const APP_UPDATES = [
+      {
+        version: 'v7.0',
+        date: '2026/07/23',
+        title: '「個人ステータス領域」＆「うさぎハンターランキング」＆「連続ログイン称号」登場！',
+        details: [
+          'トップ画面に「通算/連続ログイン・総獲得札・今週XP・取得称号数・総獲得うさちゃん」を一望できるゲームステータス風の「プレイヤー個人ステータス領域」を新設！ホバーアニメーションも超リッチ！',
+          '隠れうさちゃんをタップした際、カウントアップ＆Firebase同期するようになり、累計30匹達成で新称号「うさぎの友達」が自動的に手に入ります！',
+          '週間ランキングに「今週のうさぎハンター（うさちゃん捕獲数）」部門を追加し、毎週月曜0:00に自動リセット・更新されるようになりました！',
+          '新称号として、連続ログイン（7日・14日・21日・30日）でのアチーブメント、および週間ランキング功労者称号（今週の風・鉄壁・皆勤賞）をフルサポートし、マイページの称号実績モーダルと統合しました！',
+          '「お手つき最小王（ミス率部門）」の集計基準を「週に100枚以上プレイ」へと引き上げ、よりストイックな練習競争へと仕様変更しました！'
+        ]
+      },
       {
         version: 'v6.0',
         date: '2026/07/22',
@@ -2967,6 +3193,29 @@
         { key: "obon_event", name: "お盆の送り火", icon: "🌌", req: "お盆イベント（8/13〜8/16）中にお手つき2回以内でクリアする", desc: "お盆の期間中にお手つき2回以内でクリアした証！", isLimited: true }
       ];
       eventTitles.forEach(t => { titles.push(t); });
+
+      // 連続ログイン記録称号 (Login Streak Titles)
+      const streakTitles = [
+        { key: "streak_7", name: "一週間の足跡", icon: "👣", req: "連続ログイン7日を達成する", desc: "コツコツ努力の第一歩！1週間連続でログインし続けた証！", color: "#3b82f6" },
+        { key: "streak_14", name: "継続の歌詠み", icon: "📝", req: "連続ログイン14日を達成する", desc: "継続は力なり！2週間連続でログインし続けた真面目な歌詠み！", color: "#8b5cf6" },
+        { key: "streak_21", name: "三週間の鉄人", icon: "⚙️", req: "連続ログイン21日を達成する", desc: "驚異の集中持続力！3週間連続でログインし続けた鉄人！", color: "#f97316" },
+        { key: "streak_30", name: "皆勤の歌聖", icon: "👑", req: "連続ログイン30日を達成する", desc: "偉大なる皆勤の栄誉！1ヶ月間（30日）毎日欠かさずログインし続けた伝説の歌聖！", color: "#db2777" }
+      ];
+      streakTitles.forEach(t => { titles.push(t); });
+
+      // 週間ランキング獲得称号 (Weekly Hero Titles)
+      const weeklyHeroTitles = [
+        { key: "weekly_hero_wind", name: "今週の風", icon: "🍃", req: "今週のヒーロー：獲得ポイント1位を達成する", desc: "圧倒的スピードと量！週間獲得XPランキングで第1位に輝いた疾風の歌詠み！", color: "#10b981" },
+        { key: "weekly_hero_ironclad", name: "今週の鉄壁", icon: "🛡️", req: "今週のヒーロー：お手つきゼロ（週100枚以上プレイ）を達成する", desc: "一分の隙もない集中力！今週のヒーローランキングでお手つき0回を記録した鉄壁の守護者！", color: "#6366f1" },
+        { key: "weekly_hero_attendance", name: "今週の皆勤賞", icon: "📊", req: "今週のヒーロー：週間プレイ枚数が最多を達成する", desc: "圧倒的な練習量！今週最も多くの札を取って週間ランキングの最多プレイ数を記録した努力の天才！", color: "#d97706" }
+      ];
+      weeklyHeroTitles.forEach(t => { titles.push(t); });
+
+      // うさちゃん獲得称号 (Usachan Achievements)
+      const usachanTitles = [
+        { key: "usachan_friend", name: "うさぎの友達", icon: "🐇", req: "累計でうさちゃんを30匹捕まえる", desc: "おめでとう！30匹もの隠れうさちゃんを優しく見つけ出した、動物に愛されし者！", color: "#db2777" }
+      ];
+      usachanTitles.forEach(t => { titles.push(t); });
 
       return titles;
     }
@@ -3302,6 +3551,92 @@
             <div class="achievement-desc ${isUnlocked ? 'unlocked' : ''}" style="font-size: 0.85rem; color: #64748b; margin-top: 0.15rem; ${isUnlocked ? 'display: block;' : 'display: none;'}">${title.desc}</div>
           </div>
           ${getEquipBtnHTML(title.key, isUnlocked, equipped)}
+        `;
+        container.appendChild(row);
+      });
+
+      // Render Streak Titles
+      const streakHeader = document.createElement('div');
+      streakHeader.innerHTML = `<h4 style="margin: 1.5rem 0 0.8rem 0; color: #3b82f6; font-size: 1.05rem; border-bottom: 2px solid #3b82f6; padding-bottom: 0.3rem;">📅 連続ログイン記録称号 📅</h4>`;
+      container.appendChild(streakHeader);
+
+      const streakTitlesList = [
+        { key: "streak_7", name: "一週間の足跡", icon: "👣", req: "連続ログイン7日を達成する", desc: "コツコツ努力の第一歩！1週間連続でログインし続けた証！", color: "#3b82f6" },
+        { key: "streak_14", name: "継続の歌詠み", icon: "📝", req: "連続ログイン14日を達成する", desc: "継続は力なり！2週間連続でログインし続けた真面目な歌詠み！", color: "#8b5cf6" },
+        { key: "streak_21", name: "三週間の鉄人", icon: "⚙️", req: "連続ログイン21日を達成する", desc: "驚異の集中持続力！3週間連続でログインし続けた鉄人！", color: "#f97316" },
+        { key: "streak_30", name: "皆勤の歌聖", icon: "👑", req: "連続ログイン30日を達成する", desc: "偉大なる皆勤の栄誉！1ヶ月間（30日）毎日欠かさずログインし続けた伝説の歌聖！", color: "#db2777" }
+      ];
+
+      streakTitlesList.forEach(badge => {
+        const isUnlocked = debugModeEnabled || unlockedBadges.includes(badge.key);
+        const row = document.createElement('div');
+        row.className = 'achievement-row';
+        row.innerHTML = `
+          <div class="achievement-icon ${isUnlocked ? 'unlocked' : ''}" style="font-size: 2rem; background: ${isUnlocked ? badge.color + '15' : '#f1f5f9'}; border: 2px solid ${isUnlocked ? badge.color : '#e2e8f0'}; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; box-shadow: ${isUnlocked ? '0 4px 10px ' + badge.color + '30' : 'none'};">${badge.icon}</div>
+          <div class="achievement-info">
+            <div class="achievement-title ${isUnlocked ? 'unlocked' : ''}" style="font-weight: bold; color: ${isUnlocked ? badge.color : '#94a3b8'};">
+              ${badge.name} ${isUnlocked ? '✨獲得！✨' : '🔒未獲得'}
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">条件: ${badge.req}</div>
+            <div class="achievement-desc ${isUnlocked ? 'unlocked' : ''}" style="font-size: 0.85rem; color: #64748b; margin-top: 0.15rem; ${isUnlocked ? 'display: block;' : 'display: none;'}">${badge.desc}</div>
+          </div>
+          ${getEquipBtnHTML(badge.key, isUnlocked, equipped)}
+        `;
+        container.appendChild(row);
+      });
+
+      // Render Weekly Hero Titles
+      const weeklyHeroHeader = document.createElement('div');
+      weeklyHeroHeader.innerHTML = `<h4 style="margin: 1.5rem 0 0.8rem 0; color: #ef4444; font-size: 1.05rem; border-bottom: 2px solid #ef4444; padding-bottom: 0.3rem;">🏆 週間ランキング獲得称号 🏆</h4>`;
+      container.appendChild(weeklyHeroHeader);
+
+      const weeklyHeroTitlesList = [
+        { key: "weekly_hero_wind", name: "今週の風", icon: "🍃", req: "今週のヒーロー：獲得ポイント1位を達成する", desc: "圧倒的スピードと量！週間獲得XPランキングで第1位に輝いた疾風の歌詠み！", color: "#10b981" },
+        { key: "weekly_hero_ironclad", name: "今週の鉄壁", icon: "🛡️", req: "今週のヒーロー：お手つきゼロ（週100枚以上プレイ）を達成する", desc: "一分の隙もない集中力！今週のヒーローランキングでお手つき0回を記録した鉄壁の守護者！", color: "#6366f1" },
+        { key: "weekly_hero_attendance", name: "今週の皆勤賞", icon: "📊", req: "今週のヒーロー：週間プレイ枚数が最多を達成する", desc: "圧倒的な練習量！今週最も多くの札を取って週間ランキングの最多プレイ数を記録した努力の天才！", color: "#d97706" }
+      ];
+
+      weeklyHeroTitlesList.forEach(badge => {
+        const isUnlocked = debugModeEnabled || unlockedBadges.includes(badge.key);
+        const row = document.createElement('div');
+        row.className = 'achievement-row';
+        row.innerHTML = `
+          <div class="achievement-icon ${isUnlocked ? 'unlocked' : ''}" style="font-size: 2rem; background: ${isUnlocked ? badge.color + '15' : '#f1f5f9'}; border: 2px solid ${isUnlocked ? badge.color : '#e2e8f0'}; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; box-shadow: ${isUnlocked ? '0 4px 10px ' + badge.color + '30' : 'none'};">${badge.icon}</div>
+          <div class="achievement-info">
+            <div class="achievement-title ${isUnlocked ? 'unlocked' : ''}" style="font-weight: bold; color: ${isUnlocked ? badge.color : '#94a3b8'};">
+              ${badge.name} ${isUnlocked ? '✨獲得！✨' : '🔒未獲得'}
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">条件: ${badge.req}</div>
+            <div class="achievement-desc ${isUnlocked ? 'unlocked' : ''}" style="font-size: 0.85rem; color: #64748b; margin-top: 0.15rem; ${isUnlocked ? 'display: block;' : 'display: none;'}">${badge.desc}</div>
+          </div>
+          ${getEquipBtnHTML(badge.key, isUnlocked, equipped)}
+        `;
+        container.appendChild(row);
+      });
+
+      // Render Usachan Titles
+      const usachanHeader = document.createElement('div');
+      usachanHeader.innerHTML = `<h4 style="margin: 1.5rem 0 0.8rem 0; color: #db2777; font-size: 1.05rem; border-bottom: 2px solid #db2777; padding-bottom: 0.3rem;">🐇 うさちゃん獲得称号 🐇</h4>`;
+      container.appendChild(usachanHeader);
+
+      const usachanTitlesList = [
+        { key: "usachan_friend", name: "うさぎの友達", icon: "🐇", req: "累計でうさちゃんを30匹捕まえる", desc: "おめでとう！30匹もの隠れうさちゃんを優しく見つけ出した、動物に愛されし者！", color: "#db2777" }
+      ];
+
+      usachanTitlesList.forEach(badge => {
+        const isUnlocked = debugModeEnabled || unlockedBadges.includes(badge.key);
+        const row = document.createElement('div');
+        row.className = 'achievement-row';
+        row.innerHTML = `
+          <div class="achievement-icon ${isUnlocked ? 'unlocked' : ''}" style="font-size: 2rem; background: ${isUnlocked ? badge.color + '15' : '#f1f5f9'}; border: 2px solid ${isUnlocked ? badge.color : '#e2e8f0'}; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; box-shadow: ${isUnlocked ? '0 4px 10px ' + badge.color + '30' : 'none'};">${badge.icon}</div>
+          <div class="achievement-info">
+            <div class="achievement-title ${isUnlocked ? 'unlocked' : ''}" style="font-weight: bold; color: ${isUnlocked ? badge.color : '#94a3b8'};">
+              ${badge.name} ${isUnlocked ? '✨獲得！✨' : '🔒未獲得'}
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">条件: ${badge.req}</div>
+            <div class="achievement-desc ${isUnlocked ? 'unlocked' : ''}" style="font-size: 0.85rem; color: #64748b; margin-top: 0.15rem; ${isUnlocked ? 'display: block;' : 'display: none;'}">${badge.desc}</div>
+          </div>
+          ${getEquipBtnHTML(badge.key, isUnlocked, equipped)}
         `;
         container.appendChild(row);
       });
@@ -4116,6 +4451,22 @@
         }
       });
 
+      // Aggregate Usachan counts
+      const usachanCounts = {};
+      const usachanSnap = snapshots['usachan'];
+      if (usachanSnap && usachanSnap.exists()) {
+        const records = usachanSnap.val();
+        Object.keys(records).forEach(key => {
+          const rec = records[key];
+          if (rec && rec.timestamp >= boundaries.start && rec.timestamp <= boundaries.end) {
+            const name = rec.name ? String(rec.name).replace(/\s*\(\d+(\.\d+)?秒?\)$/, '').trim() : '';
+            if (name && name !== '-') {
+              usachanCounts[name] = (usachanCounts[name] || 0) + 1;
+            }
+          }
+        });
+      }
+
       const xpKings = [];
       const missMasters = [];
 
@@ -4123,7 +4474,7 @@
         const stats = userStats[name];
         xpKings.push({ name, points: stats.points });
 
-        if (stats.cards >= 20) {
+        if (stats.cards >= 100) {
           const ratio = stats.misses / stats.cards;
           missMasters.push({ name, ratio, cards: stats.cards });
         }
@@ -4131,6 +4482,41 @@
 
       xpKings.sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
       missMasters.sort((a, b) => a.ratio - b.ratio || b.cards - a.cards || a.name.localeCompare(b.name));
+
+      // Real-time Weekly Hero achievement unlock check
+      let currentUsername = goshikiStorage.getItem('goshiki_current_username') || goshikiStorage.getItem('goshiki_ranking_username') || '';
+      currentUsername = currentUsername.replace(/\s*\(\d+(\.\d+)?秒?\)$/, '').trim();
+      
+      // Update player statistics dashboard weekly XP
+      const myStats = currentUsername ? userStats[currentUsername] : null;
+      const weeklyXPVal = myStats ? myStats.points : 0;
+      const weeklyXPEl = document.getElementById('stats-weekly-xp');
+      if (weeklyXPEl) {
+        weeklyXPEl.textContent = `${weeklyXPVal} XP`;
+      }
+
+      if (currentUsername) {
+        // 1. 今週の風 (Weekly Hero Rank 1 in XP Kings)
+        if (xpKings[0] && xpKings[0].name === currentUsername && xpKings[0].points > 0) {
+          checkBadgeUnlock('weekly_hero_wind');
+        }
+        
+        // 2. 今週の鉄壁 (Weekly Hero Misses = 0 and played >= 100 cards)
+        if (myStats && myStats.misses === 0 && myStats.cards >= 100) {
+          checkBadgeUnlock('weekly_hero_ironclad');
+        }
+        
+        // 3. 今週の皆勤賞 (Weekly Hero played maximum cards)
+        let maxCards = 0;
+        Object.keys(userStats).forEach(name => {
+          if (userStats[name].cards > maxCards) {
+            maxCards = userStats[name].cards;
+          }
+        });
+        if (myStats && myStats.cards === maxCards && maxCards >= 20) {
+          checkBadgeUnlock('weekly_hero_attendance');
+        }
+      }
 
       const medals = ['🥇', '🥈', '🥉'];
       let newXpKey = '';
@@ -4162,11 +4548,37 @@
         triggerHeroCardAnimation('weekly-hero-miss-card');
       }
       missListEl.setAttribute('data-prev-kings', newMissKey);
+
+      // Usachan Hunter Table Rendering
+      const usachanListEl = document.getElementById('weekly-hero-usachan-list');
+      if (usachanListEl) {
+        const prevUsachanKings = usachanListEl.getAttribute('data-prev-kings') || '';
+        const hunters = [];
+        Object.keys(usachanCounts).forEach(name => {
+          hunters.push({ name, count: usachanCounts[name] });
+        });
+        hunters.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+
+        let usachanHtml = '';
+        let newUsachanKey = '';
+        for (let i = 0; i < 3; i++) {
+          const h = hunters[i] || { name: '-', count: 0 };
+          newUsachanKey += `${h.name}:${h.count}|`;
+          const countStr = h.count > 0 ? `${h.count} 匹` : '0 匹';
+          usachanHtml += `<div style="display: flex; justify-content: space-between;"><span>${medals[i]} ${escapeHTML(h.name)}</span> <span style="color: #64748b; font-size: 0.72rem; font-weight: bold;">${countStr}</span></div>`;
+        }
+        usachanListEl.innerHTML = usachanHtml;
+        if (prevUsachanKings && prevUsachanKings !== newUsachanKey) {
+          triggerHeroCardAnimation('weekly-hero-usachan-card');
+        }
+        usachanListEl.setAttribute('data-prev-kings', newUsachanKey);
+      }
     }
 
     window.loadWeeklyHeroes = function() {
       const xpListEl = document.getElementById('weekly-hero-xp-list');
       const missListEl = document.getElementById('weekly-hero-miss-list');
+      const usachanListEl = document.getElementById('weekly-hero-usachan-list');
       const panel = document.getElementById('weekly-hero-panel');
       if (panel) panel.style.display = 'block';
 
@@ -4180,10 +4592,16 @@
         <div style="display: flex; justify-content: space-between;"><span>🥈 -</span> <span style="color: #64748b;">--%</span></div>
         <div style="display: flex; justify-content: space-between;"><span>🥉 -</span> <span style="color: #64748b;">--%</span></div>
       `;
+      const defaultUsachanHTML = `
+        <div style="display: flex; justify-content: space-between;"><span>🥇 -</span> <span style="color: #64748b;">0 匹</span></div>
+        <div style="display: flex; justify-content: space-between;"><span>🥈 -</span> <span style="color: #64748b;">0 匹</span></div>
+        <div style="display: flex; justify-content: space-between;"><span>🥉 -</span> <span style="color: #64748b;">0 匹</span></div>
+      `;
 
       if (!window.db || !window.onValue || !window.ref) {
         if (xpListEl) xpListEl.innerHTML = defaultXpHTML;
         if (missListEl) missListEl.innerHTML = defaultMissHTML;
+        if (usachanListEl) usachanListEl.innerHTML = defaultUsachanHTML;
         return;
       }
 
@@ -4205,4 +4623,14 @@
         });
         window.weeklyUnsubscribes.push(unsub);
       });
+
+      // Add usachan_records_v3 listener
+      const usachanRef = window.ref(window.db, 'usachan_records_v3');
+      const unsubUsachan = window.onValue(usachanRef, (snap) => {
+        snapshots['usachan'] = snap;
+        recalculateAndRenderWeeklyHeroes(snapshots);
+      }, (err) => {
+        console.error("Error listening to usachan:", err);
+      });
+      window.weeklyUnsubscribes.push(unsubUsachan);
     };

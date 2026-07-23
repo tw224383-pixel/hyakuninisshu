@@ -1733,9 +1733,82 @@
       border-bottom: 1px dashed rgba(251, 191, 36, 0.4);
       padding-bottom: 0.4rem;
     }
+    .player-stats-panel {
+      background: var(--bg-card, rgba(255, 255, 255, 0.9));
+      border: 2px solid var(--theme-color, #8b5cf6);
+      border-radius: 16px;
+      padding: 1rem;
+      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15);
+      margin-top: 1rem;
+      width: 100%;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .player-stats-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--theme-color, #8b5cf6);
+      margin-bottom: 0.8rem;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .player-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.6rem;
+    }
+    .player-stats-card {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .player-stats-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.1);
+      border-color: var(--theme-color, #8b5cf6);
+    }
+    .player-stats-icon {
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: rgba(139, 92, 246, 0.08);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .player-stats-info {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+      min-width: 0;
+    }
+    .player-stats-label {
+      font-size: 0.62rem;
+      color: #64748b;
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .player-stats-value {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #1e293b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     .weekly-hero-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 0.8rem;
     }
     .weekly-hero-card {

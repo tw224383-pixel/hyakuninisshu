@@ -412,6 +412,16 @@
                   <div style="display: flex; justify-content: space-between;"><span>🥉 -</span> <span style="color: #64748b;">--%</span></div>
                 </div>
               </div>
+
+              <!-- Usachan Hunter Table -->
+              <div class="weekly-hero-card" id="weekly-hero-usachan-card">
+                <span class="weekly-hero-badge" style="background: #db2777; margin-bottom: 0.5rem; width: 100%; text-align: center;">🐇 うさぎハンター (捕獲数)</span>
+                <div id="weekly-hero-usachan-list" style="width: 100%; font-size: 0.78rem; text-align: left; display: flex; flex-direction: column; gap: 4px;">
+                  <div style="display: flex; justify-content: space-between;"><span>🥇 -</span> <span style="color: #64748b;">0 匹</span></div>
+                  <div style="display: flex; justify-content: space-between;"><span>🥈 -</span> <span style="color: #64748b;">0 匹</span></div>
+                  <div style="display: flex; justify-content: space-between;"><span>🥉 -</span> <span style="color: #64748b;">0 匹</span></div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -462,6 +472,62 @@
               <a href="#" onclick="openSkinsModal(); return false;" style="font-size: 0.82rem; font-weight: bold; color: #10b981; text-decoration: underline; display: inline-flex; align-items: center; gap: 0.2rem;">
                 🎴 デザイン図鑑
               </a>
+            </div>
+          </div>
+
+          <!-- プレイヤー統計ステータス領域 (Player Statistics Status Region) -->
+          <div class="player-stats-panel" id="player-stats-panel">
+            <div class="player-stats-title">📊 プレイヤー個人ステータス 📊</div>
+            <div class="player-stats-grid">
+              
+              <div class="player-stats-card">
+                <span class="player-stats-icon">📅</span>
+                <div class="player-stats-info">
+                  <span class="player-stats-label">通算ログイン</span>
+                  <span class="player-stats-value" id="stats-total-logins">1 日</span>
+                </div>
+              </div>
+
+              <div class="player-stats-card">
+                <span class="player-stats-icon">🔥</span>
+                <div class="player-stats-info">
+                  <span class="player-stats-label">連続ログイン</span>
+                  <span class="player-stats-value" id="stats-streak-logins">1 日</span>
+                </div>
+              </div>
+
+              <div class="player-stats-card">
+                <span class="player-stats-icon">🎴</span>
+                <div class="player-stats-info">
+                  <span class="player-stats-label">総獲得札数</span>
+                  <span class="player-stats-value" id="stats-total-cards">0 枚</span>
+                </div>
+              </div>
+
+              <div class="player-stats-card">
+                <span class="player-stats-icon">⚡</span>
+                <div class="player-stats-info">
+                  <span class="player-stats-label">今週の獲得XP</span>
+                  <span class="player-stats-value" id="stats-weekly-xp">0 XP</span>
+                </div>
+              </div>
+
+              <div class="player-stats-card">
+                <span class="player-stats-icon">🏆</span>
+                <div class="player-stats-info">
+                  <span class="player-stats-label">取得称号数</span>
+                  <span class="player-stats-value" id="stats-titles-count">0 / 0</span>
+                </div>
+              </div>
+
+              <div class="player-stats-card">
+                <span class="player-stats-icon">🐇</span>
+                <div class="player-stats-info">
+                  <span class="player-stats-label">総獲得うさちゃん</span>
+                  <span class="player-stats-value" id="stats-total-usachan">0 匹</span>
+                </div>
+              </div>
+
             </div>
           </div>
 
@@ -915,6 +981,8 @@
         window.db = db;
         window.query = query;
         window.ref = ref;
+        window.push = push;
+        window.set = set;
         window.orderByChild = orderByChild;
         window.limitToFirst = limitToFirst;
         window.get = get;
@@ -1168,13 +1236,42 @@
 
     window.syncItemToFirebase = function(key, value) {
       if (db && currentUserKey && !isSyncing) {
-        set(ref(db, `users/${currentUserKey}/${key}`), value);
+        let targetKey = key;
+        let targetValue = value;
+        if (key === 'goshiki_login_streak') {
+          targetKey = 'login_streak';
+          targetValue = Number(value);
+        } else if (key === 'goshiki_last_login_date') {
+          targetKey = 'last_login_date';
+        } else if (key === 'goshiki_total_usachan_count') {
+          targetKey = 'total_usachan_count';
+          targetValue = Number(value);
+        } else if (key === 'goshiki_weekly_usachan_count') {
+          targetKey = 'weekly_usachan_count';
+          targetValue = Number(value);
+        } else if (key === 'goshiki_total_logins') {
+          targetKey = 'total_logins';
+          targetValue = Number(value);
+        }
+        set(ref(db, `users/${currentUserKey}/${targetKey}`), targetValue);
       }
     };
 
     window.syncRemoveFromFirebase = function(key) {
       if (db && currentUserKey && !isSyncing) {
-        set(ref(db, `users/${currentUserKey}/${key}`), null);
+        let targetKey = key;
+        if (key === 'goshiki_login_streak') {
+          targetKey = 'login_streak';
+        } else if (key === 'goshiki_last_login_date') {
+          targetKey = 'last_login_date';
+        } else if (key === 'goshiki_total_usachan_count') {
+          targetKey = 'total_usachan_count';
+        } else if (key === 'goshiki_weekly_usachan_count') {
+          targetKey = 'weekly_usachan_count';
+        } else if (key === 'goshiki_total_logins') {
+          targetKey = 'total_logins';
+        }
+        set(ref(db, `users/${currentUserKey}/${targetKey}`), null);
       }
     };
 
@@ -1223,6 +1320,21 @@
               baseGoshikiStorage.setItem(k, data[k]);
             }
           });
+          if (data.login_streak !== undefined) {
+            baseGoshikiStorage.setItem('goshiki_login_streak', String(data.login_streak));
+          }
+          if (data.last_login_date !== undefined) {
+            baseGoshikiStorage.setItem('goshiki_last_login_date', data.last_login_date);
+          }
+          if (data.total_usachan_count !== undefined) {
+            baseGoshikiStorage.setItem('goshiki_total_usachan_count', String(data.total_usachan_count));
+          }
+          if (data.weekly_usachan_count !== undefined) {
+            baseGoshikiStorage.setItem('goshiki_weekly_usachan_count', String(data.weekly_usachan_count));
+          }
+          if (data.total_logins !== undefined) {
+            baseGoshikiStorage.setItem('goshiki_total_logins', String(data.total_logins));
+          }
           // Reload everything
           if (typeof loadLevelData === 'function') loadLevelData();
           if (typeof loadRecords === 'function') loadRecords();
@@ -1247,6 +1359,26 @@
             if (k && k.startsWith('goshiki_')) {
               localData[k] = baseGoshikiStorage.getItem(k);
             }
+          }
+          const streak = baseGoshikiStorage.getItem('goshiki_login_streak');
+          if (streak !== null) {
+            localData.login_streak = Number(streak);
+          }
+          const lastLogin = baseGoshikiStorage.getItem('goshiki_last_login_date');
+          if (lastLogin !== null) {
+            localData.last_login_date = lastLogin;
+          }
+          const totalUsachan = baseGoshikiStorage.getItem('goshiki_total_usachan_count');
+          if (totalUsachan !== null) {
+            localData.total_usachan_count = Number(totalUsachan);
+          }
+          const weeklyUsachan = baseGoshikiStorage.getItem('goshiki_weekly_usachan_count');
+          if (weeklyUsachan !== null) {
+            localData.weekly_usachan_count = Number(weeklyUsachan);
+          }
+          const totalLoginsVal = baseGoshikiStorage.getItem('goshiki_total_logins');
+          if (totalLoginsVal !== null) {
+            localData.total_logins = Number(totalLoginsVal);
           }
           
           set(ref(db, `users/${userKey}`), localData).then(() => {
@@ -1296,6 +1428,10 @@
       // Also fetch and load ranking immediately
       if (typeof window.listenToRankings === 'function') {
         window.listenToRankings();
+      }
+
+      if (typeof window.checkAndUpdateLoginStreak === 'function') {
+        window.checkAndUpdateLoginStreak();
       }
     }
 
@@ -1419,6 +1555,9 @@
         }
         window.isInitializing = false;
         if (typeof window.checkStartupMascot === 'function') window.checkStartupMascot();
+        if (typeof window.checkAndUpdateLoginStreak === 'function') {
+          window.checkAndUpdateLoginStreak();
+        }
         return;
       }
 
@@ -1443,6 +1582,9 @@
           if (!db) {
             window.isInitializing = false;
             if (typeof window.checkStartupMascot === 'function') window.checkStartupMascot();
+            if (typeof window.checkAndUpdateLoginStreak === 'function') {
+              window.checkAndUpdateLoginStreak();
+            }
             return;
           }
           isSyncing = true;
@@ -1454,6 +1596,21 @@
                   baseGoshikiStorage.setItem(k, data[k]);
                 }
               });
+              if (data.login_streak !== undefined) {
+                baseGoshikiStorage.setItem('goshiki_login_streak', String(data.login_streak));
+              }
+              if (data.last_login_date !== undefined) {
+                baseGoshikiStorage.setItem('goshiki_last_login_date', data.last_login_date);
+              }
+              if (data.total_usachan_count !== undefined) {
+                baseGoshikiStorage.setItem('goshiki_total_usachan_count', String(data.total_usachan_count));
+              }
+              if (data.weekly_usachan_count !== undefined) {
+                baseGoshikiStorage.setItem('goshiki_weekly_usachan_count', String(data.weekly_usachan_count));
+              }
+              if (data.total_logins !== undefined) {
+                baseGoshikiStorage.setItem('goshiki_total_logins', String(data.total_logins));
+              }
               if (typeof loadLevelData === 'function') loadLevelData();
               if (typeof loadRecords === 'function') loadRecords();
               if (typeof updateTotalAcquiredCount === 'function') updateTotalAcquiredCount();
@@ -1464,10 +1621,16 @@
             isSyncing = false;
             window.isInitializing = false;
             if (typeof window.checkStartupMascot === 'function') window.checkStartupMascot();
+            if (typeof window.checkAndUpdateLoginStreak === 'function') {
+              window.checkAndUpdateLoginStreak();
+            }
           }).catch(() => { 
             isSyncing = false; 
             window.isInitializing = false;
             if (typeof window.checkStartupMascot === 'function') window.checkStartupMascot();
+            if (typeof window.checkAndUpdateLoginStreak === 'function') {
+              window.checkAndUpdateLoginStreak();
+            }
           });
         }, 1000);
       } else {
