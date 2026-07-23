@@ -1252,6 +1252,9 @@
         } else if (key === 'goshiki_total_logins') {
           targetKey = 'total_logins';
           targetValue = Number(value);
+        } else if (key === 'goshiki_weekly_xp') {
+          targetKey = 'weekly_xp';
+          targetValue = Number(value);
         }
         set(ref(db, `users/${currentUserKey}/${targetKey}`), targetValue);
       }
@@ -1270,6 +1273,8 @@
           targetKey = 'weekly_usachan_count';
         } else if (key === 'goshiki_total_logins') {
           targetKey = 'total_logins';
+        } else if (key === 'goshiki_weekly_xp') {
+          targetKey = 'weekly_xp';
         }
         set(ref(db, `users/${currentUserKey}/${targetKey}`), null);
       }

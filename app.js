@@ -388,11 +388,23 @@
         }
       }
       
+      let weeklyXp = parseInt(goshikiStorage.getItem('goshiki_weekly_xp') || '0');
+      weeklyXp += amount;
+      goshikiStorage.setItem('goshiki_weekly_xp', String(weeklyXp));
+      
+      if (!window.isGuestMode && typeof window.syncItemToFirebase === 'function') {
+        window.syncItemToFirebase('goshiki_weekly_xp', weeklyXp);
+      }
+
       saveLevelData();
       updateXPUI();
       
       if (typeof window.checkAndUpdateWeeklyHeroes === 'function') {
         window.checkAndUpdateWeeklyHeroes(amount, 0, 0);
+      }
+
+      if (typeof updatePlayerStatsDashboard === 'function') {
+        updatePlayerStatsDashboard();
       }
     }
 
@@ -1636,6 +1648,7 @@
 
       if (getMondayOf(lastLoginStr) !== getMondayOf(todayStr)) {
         goshikiStorage.setItem('goshiki_weekly_usachan_count', '0');
+        goshikiStorage.setItem('goshiki_weekly_xp', '0');
       }
     }
 
@@ -1758,7 +1771,12 @@
       const titlesEl = document.getElementById('stats-titles-count');
       if (titlesEl) titlesEl.textContent = `${titleStats.unlocked} / ${titleStats.total}`;
 
-      // 5. Total usachan count
+      // 5. Weekly XP
+      const weeklyXp = goshikiStorage.getItem('goshiki_weekly_xp') || '0';
+      const weeklyXpEl = document.getElementById('stats-weekly-xp');
+      if (weeklyXpEl) weeklyXpEl.textContent = `${weeklyXp} XP`;
+
+      // 6. Total usachan count
       const totalUsachan = goshikiStorage.getItem('goshiki_total_usachan_count') || '0';
       const totalUsachanEl = document.getElementById('stats-total-usachan');
       if (totalUsachanEl) totalUsachanEl.textContent = `${totalUsachan} 匹`;
@@ -3464,8 +3482,8 @@
 
       // Render Special achievements
       const specials = [
-        { key: "strongest_4th_grader", name: "最強の4年生", icon: "👑", req: "全5色をそれぞれお手つき0でクリアする", desc: "素晴らしい精神集中力！5色の札すべてにおいて完璧なノーミスクリアを達成した、真の最強覇者！" },
-        { key: "godspeed", name: "神速！", icon: "⚡", req: "20枚の札を「1分以内」にすべて取り終える", desc: "電光石火の早業！1分未満のスピードクリアを達成した神速のかるた使い！" },
+        { key: "strongest_4th_grader", name: "最強の4年生", icon: "💎", req: "全5色をそれぞれお手つき0でクリアする", desc: "素晴らしい精神集中力！5色の札すべてにおいて完璧なノーミスクリアを達成した、真の最強覇者！" },
+        { key: "godspeed", name: "神速！", icon: "🚀", req: "20枚の札を「1分以内」にすべて取り終える", desc: "電光石火の早業！1分未満のスピードクリアを達成した神速のかるた使い！" },
         { key: "ultimate_song_saint", name: "究極の歌聖", icon: "🏆", req: "カオスモード（100枚）を「お手つき0回」でクリアする", desc: "おてつきゼロで百首すべてを取りきった、かるたの極致！黄金のテーマ背景が解放されます。" }
       ];
 
@@ -3587,7 +3605,7 @@
         { key: "streak_7", name: "一週間の足跡", icon: "👣", req: "連続ログイン7日を達成する", desc: "コツコツ努力の第一歩！1週間連続でログインし続けた証！", color: "#3b82f6" },
         { key: "streak_14", name: "継続の歌詠み", icon: "📝", req: "連続ログイン14日を達成する", desc: "継続は力なり！2週間連続でログインし続けた真面目な歌詠み！", color: "#8b5cf6" },
         { key: "streak_21", name: "三週間の鉄人", icon: "⚙️", req: "連続ログイン21日を達成する", desc: "驚異の集中持続力！3週間連続でログインし続けた鉄人！", color: "#f97316" },
-        { key: "streak_30", name: "皆勤の歌聖", icon: "👑", req: "連続ログイン30日を達成する", desc: "偉大なる皆勤の栄誉！1ヶ月間（30日）毎日欠かさずログインし続けた伝説の歌聖！", color: "#db2777" }
+        { key: "streak_30", name: "皆勤の歌聖", icon: "🎖️", req: "連続ログイン30日を達成する", desc: "偉大なる皆勤の栄誉！1ヶ月間（30日）毎日欠かさずログインし続けた伝説の歌聖！", color: "#db2777" }
       ];
 
       streakTitlesList.forEach(badge => {
@@ -3615,7 +3633,7 @@
 
       const weeklyHeroTitlesList = [
         { key: "weekly_hero_wind", name: "今週の風", icon: "🍃", req: "今週のヒーロー：獲得ポイント1位を達成する", desc: "圧倒的スピードと量！週間獲得XPランキングで第1位に輝いた疾風の歌詠み！", color: "#10b981" },
-        { key: "weekly_hero_ironclad", name: "今週の鉄壁", icon: "🛡️", req: "今週のヒーロー：お手つきゼロ（週100枚以上プレイ）を達成する", desc: "一分の隙もない集中力！今週のヒーローランキングでお手つき0回を記録した鉄壁の守護者！", color: "#6366f1" },
+        { key: "weekly_hero_ironclad", name: "今週の鉄壁", icon: "🏰", req: "今週のヒーロー：お手つきゼロ（週100枚以上プレイ）を達成する", desc: "一分の隙もない集中力！今週のヒーローランキングでお手つき0回を記録した鉄壁の守護者！", color: "#6366f1" },
         { key: "weekly_hero_attendance", name: "今週の皆勤賞", icon: "📊", req: "今週のヒーロー：週間プレイ枚数が最多を達成する", desc: "圧倒的な練習量！今週最も多くの札を取って週間ランキングの最多プレイ数を記録した努力の天才！", color: "#d97706" }
       ];
 
@@ -4513,9 +4531,16 @@
       // Update player statistics dashboard weekly XP
       const myStats = currentUsername ? userStats[currentUsername] : null;
       const weeklyXPVal = myStats ? myStats.points : 0;
-      const weeklyXPEl = document.getElementById('stats-weekly-xp');
-      if (weeklyXPEl) {
-        weeklyXPEl.textContent = `${weeklyXPVal} XP`;
+      let localWeeklyXP = parseInt(goshikiStorage.getItem('goshiki_weekly_xp') || '0');
+      if (weeklyXPVal > localWeeklyXP) {
+        localWeeklyXP = weeklyXPVal;
+        goshikiStorage.setItem('goshiki_weekly_xp', String(localWeeklyXP));
+        if (!window.isGuestMode && typeof window.syncItemToFirebase === 'function') {
+          window.syncItemToFirebase('goshiki_weekly_xp', localWeeklyXP);
+        }
+      }
+      if (typeof updatePlayerStatsDashboard === 'function') {
+        updatePlayerStatsDashboard();
       }
 
       if (currentUsername) {
