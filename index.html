@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>黒田先生の百人一首 - 五色百人一首 練習アプリ</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=639204235615003335">
 </head>
 <body>
 
@@ -935,8 +935,8 @@
     </div>
   </div>
 
-    <script src="poems_data.js"></script>
-  <script src="app.js"></script>
+    <script src="poems_data.js?v=639204235615003335"></script>
+  <script src="app.js?v=639204235615003335"></script>
 
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
@@ -2491,11 +2491,16 @@
         <button class="setting-btn" onclick="closeSkinsModal()" style="padding: 0.5rem 1.8rem; background: #10b981; color: #fff; border: none; font-weight: bold; border-radius: 8px; cursor: pointer;">閉じる</button>
       </div>
     </div>
+  </div>
+
   <!-- Surprise Mascot -->
   <div id="surprise-mascot" onclick="triggerMascotBonus()">
     <div class="mascot-inner">
-      <span class="mascot-avatar">🐰</span>
-      <span>ラッキー！</span>
+      <div class="mascot-glow-ring"></div>
+      <div class="mascot-avatar">🐰</div>
+      <div class="mascot-title">✨ うさちゃん発見！ ✨</div>
+      <div class="mascot-subtitle">かくれうさちゃんをみつけたよ！<br>タップしてボーナスをゲット！</div>
+      <button class="mascot-tap-btn">🎉 タップ！ +200XP 🎉</button>
     </div>
   </div>
 </body>

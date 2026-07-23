@@ -1608,74 +1608,97 @@
     /* Mascot style */
     #surprise-mascot {
       position: fixed;
-      bottom: 10px;
-      right: 10px;
+      top: 0; left: 0; right: 0; bottom: 0;
+      width: 100%; height: 100%;
       z-index: 10050;
-      cursor: pointer;
-      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       display: none;
       align-items: center;
       justify-content: center;
+      background: rgba(0, 0, 0, 0.55);
+      -webkit-backdrop-filter: blur(4px);
+      backdrop-filter: blur(4px);
       user-select: none;
     }
     #surprise-mascot.active {
       display: flex;
-      animation: mascot-float 3s ease-in-out infinite, mascot-pop-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      animation: mascot-overlay-in 0.3s ease;
     }
     #surprise-mascot .mascot-inner {
-      background: rgba(255, 255, 255, 0.95);
-      border: 2px solid #8b5cf6;
-      border-radius: 12px;
-      padding: 6px 10px;
-      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.25);
+      background: linear-gradient(145deg, #fff9ff, #f3e8ff);
+      border: 4px solid #8b5cf6;
+      border-radius: 28px;
+      padding: 30px 36px 24px;
+      box-shadow: 0 0 0 6px rgba(139,92,246,0.18), 0 20px 60px rgba(139,92,246,0.45);
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 6px;
-      font-size: 0.85rem;
-      font-weight: bold;
-      color: #4c1d95;
+      gap: 10px;
       position: relative;
+      min-width: 260px;
+      max-width: 340px;
+      text-align: center;
+      animation: mascot-card-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      cursor: pointer;
     }
-    #surprise-mascot .mascot-inner::after {
-      content: '';
+    #surprise-mascot .mascot-glow-ring {
       position: absolute;
-      bottom: -6px;
-      right: 15px;
-      border-width: 6px 6px 0;
-      border-style: solid;
-      border-color: rgba(255, 255, 255, 0.95) transparent;
-      display: block;
-      width: 0;
-    }
-    #surprise-mascot .mascot-inner::before {
-      content: '';
-      position: absolute;
-      bottom: -8px;
-      right: 14px;
-      border-width: 7px 7px 0;
-      border-style: solid;
-      border-color: #8b5cf6 transparent;
-      display: block;
-      width: 0;
-      z-index: -1;
+      inset: -12px;
+      border-radius: 36px;
+      border: 3px solid rgba(168, 85, 247, 0.4);
+      animation: mascot-pulse-ring 1.5s ease-in-out infinite;
     }
     #surprise-mascot .mascot-avatar {
-      font-size: 1.8rem;
-      animation: mascot-bounce 1s ease infinite alternate;
+      font-size: 5rem;
+      line-height: 1;
+      animation: mascot-jump 0.7s ease-in-out infinite alternate;
+      filter: drop-shadow(0 8px 16px rgba(139,92,246,0.5));
     }
-    @keyframes mascot-float {
-      0% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-8px) rotate(2deg); }
-      100% { transform: translateY(0px) rotate(0deg); }
+    #surprise-mascot .mascot-title {
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: #6d28d9;
+      letter-spacing: 0.04em;
     }
-    @keyframes mascot-bounce {
-      0% { transform: translateY(0px) scale(1); }
-      100% { transform: translateY(-3px) scaleY(1.08) scaleX(0.95); }
+    #surprise-mascot .mascot-subtitle {
+      font-size: 0.9rem;
+      color: #7c3aed;
+      font-weight: 600;
     }
-    @keyframes mascot-pop-in {
-      0% { transform: scale(0) translateY(50px); opacity: 0; }
-      70% { transform: scale(1.1) translateY(-5px); opacity: 1; }
+    #surprise-mascot .mascot-tap-btn {
+      margin-top: 8px;
+      background: linear-gradient(135deg, #7c3aed, #db2777);
+      color: white;
+      font-size: 1.05rem;
+      font-weight: 800;
+      padding: 12px 28px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(124,58,237,0.5);
+      animation: mascot-btn-pulse 1s ease-in-out infinite alternate;
+      letter-spacing: 0.05em;
+    }
+    @keyframes mascot-overlay-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes mascot-card-pop {
+      0% { transform: scale(0.4) translateY(40px); opacity: 0; }
+      70% { transform: scale(1.06) translateY(-4px); opacity: 1; }
       100% { transform: scale(1) translateY(0); }
+    }
+    @keyframes mascot-jump {
+      0% { transform: translateY(0) scaleY(1) scaleX(1); }
+      80% { transform: translateY(-18px) scaleY(1.08) scaleX(0.93); }
+      100% { transform: translateY(-22px) scaleY(1.1) scaleX(0.92); }
+    }
+    @keyframes mascot-pulse-ring {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.04); }
+    }
+    @keyframes mascot-btn-pulse {
+      from { box-shadow: 0 4px 20px rgba(124,58,237,0.4); transform: scale(1); }
+      to   { box-shadow: 0 6px 30px rgba(219,39,119,0.6); transform: scale(1.04); }
     }
     
     /* Sparkle Particles */

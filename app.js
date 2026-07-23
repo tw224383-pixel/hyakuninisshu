@@ -1226,22 +1226,34 @@
 
         // Mascot consecutive correct check
         try {
-          let consecutiveCorrect = JSON.parse(goshikiStorage.getItem('goshiki_consecutive_correct_cards') || '{}');
-          if (!hasMissedCurrentCard) {
-            consecutiveCorrect[cardNo] = (consecutiveCorrect[cardNo] || 0) + 1;
-            if (consecutiveCorrect[cardNo] >= 3) {
-              consecutiveCorrect[cardNo] = 0; // Reset
-              if (Math.random() < 0.05) {
-                if (typeof window.spawnMascot === 'function') {
-                  window.spawnMascot('gameplay');
-                }
-              }
+          // デバッグモード：1枚取るだけで100%うさちゃん出現
+          if (typeof debugModeEnabled !== 'undefined' && debugModeEnabled) {
+            // alert('DEBUG: Debug mode is true. Spawning mascot!');
+            if (typeof window.spawnMascot === 'function') {
+              window.spawnMascot('gameplay');
+            } else {
+              alert('DEBUG ERROR: window.spawnMascot is not a function');
             }
           } else {
-            consecutiveCorrect[cardNo] = 0; // Reset
+            let consecutiveCorrect = JSON.parse(goshikiStorage.getItem('goshiki_consecutive_correct_cards') || '{}');
+            if (!hasMissedCurrentCard) {
+              consecutiveCorrect[cardNo] = (consecutiveCorrect[cardNo] || 0) + 1;
+              if (consecutiveCorrect[cardNo] >= 3) {
+                consecutiveCorrect[cardNo] = 0; // Reset
+                if (Math.random() < 0.05) {
+                  if (typeof window.spawnMascot === 'function') {
+                    window.spawnMascot('gameplay');
+                  }
+                }
+              }
+            } else {
+              consecutiveCorrect[cardNo] = 0; // Reset
+            }
+            goshikiStorage.setItem('goshiki_consecutive_correct_cards', JSON.stringify(consecutiveCorrect));
           }
-          goshikiStorage.setItem('goshiki_consecutive_correct_cards', JSON.stringify(consecutiveCorrect));
-        } catch (e) {}
+        } catch (e) {
+          alert('DEBUG ERROR in consecutive correct check: ' + e.message);
+        }
 
         targetIndex++;
         document.getElementById('cards-remaining').textContent = String(currentSet.length - targetIndex);
@@ -1847,6 +1859,8 @@
       }
     }
 
+
+
     function checkBadgeAchievements(elapsed) {
       // 1. Cleared colors collection
       if (selectedColor !== 'chaos' && selectedColor !== 'mix') {
@@ -2050,9 +2064,13 @@
 
     function spawnMascot(triggerType) {
       const mascot = document.getElementById('surprise-mascot');
-      if (!mascot) return;
+      if (!mascot) {
+        alert('DEBUG ERROR: mascot element not found in DOM!');
+        return;
+      }
       currentMascotTriggerType = triggerType;
       mascot.classList.add('active');
+      mascot.style.display = 'flex'; // Force display flex just in case
     }
     window.spawnMascot = spawnMascot;
 
@@ -2061,6 +2079,7 @@
       if (!mascot) return;
       
       mascot.classList.remove('active');
+      mascot.style.display = 'none'; // Force hide just in case
       
       if (currentMascotTriggerType === 'startup') {
         goshikiStorage.setItem('goshiki_last_mascot_date', getTodayDateString());
@@ -2917,7 +2936,8 @@
           'まいにちログインし続けると、「一週間の足跡」や「継続の歌詠み」などの新しいかっこいい称号が自動でもらえるようになったよ！マイページで確認してセットしてみよう！',
           '「お手つき最小王」になるためのルールが少し変わって、１週間に１００枚以上お札をとった人が選ばれる、より本格的な修行になったよ！がんばって挑戦してね！',
           '今週のヒーローランキングが「リアルタイム」で自動で新しくなるようになったよ！画面を更新しなくても最新の順位に自動で切り替わるよ！',
-          'スタート画面のボタンやコーチのアドバイスを真ん中にキレイに並べて、スッキリ見やすくなったよ！'
+          'スタート画面のボタンやコーチのアドバイスを真ん中にキレイに並べて、スッキリ見やすくなったよ！',
+          'うさちゃんが透明になってしまうバグを修正したよ！ときどき画面に飛び出してくるようになったから、見つけたらすばやくタップしてね！'
         ]
       },
       {
